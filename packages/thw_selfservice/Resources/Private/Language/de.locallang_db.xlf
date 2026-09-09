@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+    <file source-language="en" target-language="de" datatype="plaintext" original="messages" date="2026-09-09T00:00:00Z" product-name="thw_selfservice">
+        <header/>
+        <body>
+            <!-- OrganizationalUnit -->
+            <trans-unit id="tx_thwselfservice_domain_model_organizationalunit" resname="tx_thwselfservice_domain_model_organizationalunit">
+                <source>Organizational Unit</source>
+                <target>Organisationseinheit</target>
+            </trans-unit>
+            <trans-unit id="tx_thwselfservice_domain_model_organizationalunit.title" resname="tx_thwselfservice_domain_model_organizationalunit.title">
+                <source>Title</source>
+                <target>Bezeichnung</target>
+            </trans-unit>
+            <trans-unit id="tx_thwselfservice_domain_model_organizationalunit.code" resname="tx_thwselfservice_domain_model_organizationalunit.code">
+                <source>Code</source>
+                <target>Kürzel</target>
+            </trans-unit>
+            <trans-unit id="tx_thwselfservice_domain_model_organizationalunit.parent" resname="tx_thwselfservice_domain_model_organizationalunit.parent">
+                <source>Parent Unit</source>
+                <target>Übergeordnete Einheit</target>
+            </trans-unit>
+            <trans-unit id="tx_thwselfservice_domain_model_organizationalunit.active" resname="tx_thwselfservice_domain_model_organizationalunit.active">
+                <source>Active</source>
+                <target>Aktiv</target>
+            </trans-unit>
+
+            <!-- fe_users THW fields -->
+            <trans-unit id="fe_users.tab.thw" resname="fe_users.tab.thw">
+                <source>THW</source>
+                <target>THW</target>
+            </trans-unit>
+            <trans-unit id="fe_users.thw_uid" resname="fe_users.thw_uid">
+                <source>THW UID</source>
+                <target>THW-Kennung</target>
+            </trans-unit>
+            <trans-unit id="fe_users.thw_ou" resname="fe_users.thw_ou">
+                <source>Organizational Unit</source>
+                <target>Organisationseinheit (OE)</target>
+            </trans-unit>
+            <trans-unit id="fe_users.thw_birthdate" resname="fe_users.thw_birthdate">
+                <source>Birth Date</source>
+                <target>Geburtsdatum</target>
+            </trans-unit>
+            <trans-unit id="fe_users.thw_active" resname="fe_users.thw_active">
+                <source>Active (THW)</source>
+                <target>Aktiv (THW)</target>
+            </trans-unit>
+            <trans-unit id="fe_users.thw_portal_access" resname="fe_users.thw_portal_access">
+                <source>Portal Access</source>
+                <target>Portalzugang</target>
+            </trans-unit>
+            <trans-unit id="fe_users.thw_sso_subject" resname="fe_users.thw_sso_subject">
+                <source>SSO Subject</source>
+                <target>SSO-Kennung</target>
+            </trans-unit>
+            <trans-unit id="fe_users.thw_last_import" resname="fe_users.thw_last_import">
+                <source>Last Import</source>
+                <target>Letzter Import</target>
+            </trans-unit>
+        </body>
+    </file>
+</xliff>
