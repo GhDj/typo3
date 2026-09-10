@@ -44,6 +44,7 @@ $thwColumns = [
         'label' => 'LLL:EXT:thw_ovssp/Resources/Private/Language/locallang_db.xlf:fe_users.thw_birthdate',
         'config' => [
             'type' => 'datetime',
+            'dbType' => 'date',
             'format' => 'date',
         ],
     ],
@@ -58,6 +59,7 @@ $thwColumns = [
         'label' => 'LLL:EXT:thw_ovssp/Resources/Private/Language/locallang_db.xlf:fe_users.thw_last_import',
         'config' => [
             'type' => 'datetime',
+            'dbType' => 'datetime',
             'readOnly' => true,
         ],
     ],
@@ -65,6 +67,7 @@ $thwColumns = [
         'label' => 'LLL:EXT:thw_ovssp/Resources/Private/Language/locallang_db.xlf:fe_users.thw_import_missing_since',
         'config' => [
             'type' => 'datetime',
+            'dbType' => 'datetime',
             'readOnly' => true,
         ],
     ],
