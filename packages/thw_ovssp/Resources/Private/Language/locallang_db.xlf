@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+    <file source-language="en" datatype="plaintext" original="messages" date="2026-09-10T00:00:00Z" product-name="thw_ovssp">
+        <header/>
+        <body>
+            <!-- OrgUnit -->
+            <trans-unit id="tx_thwovssp_domain_model_orgunit" resname="tx_thwovssp_domain_model_orgunit">
+                <source>Organizational Unit</source>
+            </trans-unit>
+            <trans-unit id="tx_thwovssp_domain_model_orgunit.thw_oe_uid" resname="tx_thwovssp_domain_model_orgunit.thw_oe_uid">
+                <source>THW OE UID</source>
+            </trans-unit>
+            <trans-unit id="tx_thwovssp_domain_model_orgunit.oe_code" resname="tx_thwovssp_domain_model_orgunit.oe_code">
+                <source>OE Code</source>
+            </trans-unit>
+            <trans-unit id="tx_thwovssp_domain_model_orgunit.name" resname="tx_thwovssp_domain_model_orgunit.name">
+                <source>Name</source>
+            </trans-unit>
+            <trans-unit id="tx_thwovssp_domain_model_orgunit.mail_address" resname="tx_thwovssp_domain_model_orgunit.mail_address">
+                <source>Email Address</source>
+            </trans-unit>
+            <trans-unit id="tx_thwovssp_domain_model_orgunit.regionalbereich_code" resname="tx_thwovssp_domain_model_orgunit.regionalbereich_code">
+                <source>Regionalbereich Code</source>
+            </trans-unit>
+            <trans-unit id="tx_thwovssp_domain_model_orgunit.landesverband_code" resname="tx_thwovssp_domain_model_orgunit.landesverband_code">
+                <source>Landesverband Code</source>
+            </trans-unit>
+            <trans-unit id="tx_thwovssp_domain_model_orgunit.active" resname="tx_thwovssp_domain_model_orgunit.active">
+                <source>Active</source>
+            </trans-unit>
+
+            <!-- Directory -->
+            <trans-unit id="tx_thwovssp_domain_model_directory" resname="tx_thwovssp_domain_model_directory">
+                <source>Directory</source>
+            </trans-unit>
+            <trans-unit id="tx_thwovssp_domain_model_directory.name" resname="tx_thwovssp_domain_model_directory.name">
+                <source>Name</source>
+            </trans-unit>
+            <trans-unit id="tx_thwovssp_domain_model_directory.allows_read" resname="tx_thwovssp_domain_model_directory.allows_read">
+                <source>Read Permission Group Exists</source>
+            </trans-unit>
+            <trans-unit id="tx_thwovssp_domain_model_directory.allows_write" resname="tx_thwovssp_domain_model_directory.allows_write">
+                <source>Write Permission Group Exists</source>
+            </trans-unit>
+            <trans-unit id="tx_thwovssp_domain_model_directory.sort_key" resname="tx_thwovssp_domain_model_directory.sort_key">
+                <source>Sort Key</source>
+            </trans-unit>
+            <trans-unit id="tx_thwovssp_domain_model_directory.description" resname="tx_thwovssp_domain_model_directory.description">
+                <source>Description</source>
+            </trans-unit>
+
+            <!-- fe_users THW fields -->
+            <trans-unit id="fe_users.tab.thw" resname="fe_users.tab.thw">
+                <source>THW</source>
+            </trans-unit>
+            <trans-unit id="fe_users.thw_uid" resname="fe_users.thw_uid">
+                <source>THW UID</source>
+            </trans-unit>
+            <trans-unit id="fe_users.thw_orgunit" resname="fe_users.thw_orgunit">
+                <source>Organizational Unit</source>
+            </trans-unit>
+            <trans-unit id="fe_users.thw_realm" resname="fe_users.thw_realm">
+                <source>AD Realm</source>
+            </trans-unit>
+            <trans-unit id="fe_users.thw_last_import" resname="fe_users.thw_last_import">
+                <source>Last Import</source>
+            </trans-unit>
+            <trans-unit id="fe_users.thw_import_missing_since" resname="fe_users.thw_import_missing_since">
+                <source>Missing Since</source>
+            </trans-unit>
+        </body>
+    </file>
+</xliff>
