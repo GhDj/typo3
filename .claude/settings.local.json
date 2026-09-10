@@ -1,8 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(find /Users/jalel/Documents/Projects -path */vendor/typo3/cms-core -type d)",
-      "Bash(git -C /Users/jalel/Documents/Projects/active-directory log --oneline)"
-    ]
-  }
-}
