@@ -1,0 +1,14 @@
+services:
+  _defaults:
+    autowire: true
+    autoconfigure: true
+    public: false
+
+  Thw\ThwSso\:
+    resource: '../Classes/*'
+
+  Thw\ThwSso\Command\ImportCommand:
+    tags:
+      - name: console.command
+        command: 'sso:import'
+        description: 'Import CSV data (users, orgunits, directories)'

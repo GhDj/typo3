@@ -1,0 +1,21 @@
+{
+    "name": "thw/thw-sso",
+    "type": "typo3-cms-extension",
+    "description": "THW OV Self-Service-Portal (OV-SSP)",
+    "license": "GPL-2.0-or-later",
+    "require": {
+        "typo3/cms-core": "^14.0",
+        "typo3/cms-extbase": "^14.0",
+        "typo3/cms-frontend": "^14.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Thw\\ThwSso\\": "Classes/"
+        }
+    },
+    "extra": {
+        "typo3/cms": {
+            "extension-key": "thw_sso"
+        }
+    }
+}
