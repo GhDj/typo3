@@ -14,6 +14,10 @@ class User extends FrontendUser
 
     protected string $thwRealm = '';
 
+    protected ?\DateTime $thwBirthdate = null;
+
+    protected bool $thwPortalAccess = false;
+
     protected ?\DateTime $thwLastImport = null;
 
     protected ?\DateTime $thwImportMissingSince = null;
@@ -31,6 +35,26 @@ class User extends FrontendUser
     public function getThwRealm(): string
     {
         return $this->thwRealm;
+    }
+
+    public function getThwBirthdate(): ?\DateTime
+    {
+        return $this->thwBirthdate;
+    }
+
+    public function setThwBirthdate(?\DateTime $thwBirthdate): void
+    {
+        $this->thwBirthdate = $thwBirthdate;
+    }
+
+    public function isThwPortalAccess(): bool
+    {
+        return $this->thwPortalAccess;
+    }
+
+    public function setThwPortalAccess(bool $thwPortalAccess): void
+    {
+        $this->thwPortalAccess = $thwPortalAccess;
     }
 
     public function getThwLastImport(): ?\DateTime

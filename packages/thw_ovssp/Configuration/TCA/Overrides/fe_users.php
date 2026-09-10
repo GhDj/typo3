@@ -40,6 +40,20 @@ $thwColumns = [
             'readOnly' => true,
         ],
     ],
+    'thw_birthdate' => [
+        'label' => 'LLL:EXT:thw_ovssp/Resources/Private/Language/locallang_db.xlf:fe_users.thw_birthdate',
+        'config' => [
+            'type' => 'datetime',
+            'format' => 'date',
+        ],
+    ],
+    'thw_portal_access' => [
+        'label' => 'LLL:EXT:thw_ovssp/Resources/Private/Language/locallang_db.xlf:fe_users.thw_portal_access',
+        'config' => [
+            'type' => 'check',
+            'default' => 0,
+        ],
+    ],
     'thw_last_import' => [
         'label' => 'LLL:EXT:thw_ovssp/Resources/Private/Language/locallang_db.xlf:fe_users.thw_last_import',
         'config' => [
@@ -60,5 +74,5 @@ ExtensionManagementUtility::addTCAcolumns('fe_users', $thwColumns);
 
 ExtensionManagementUtility::addToAllTCAtypes(
     'fe_users',
-    '--div--;LLL:EXT:thw_ovssp/Resources/Private/Language/locallang_db.xlf:fe_users.tab.thw, thw_uid, thw_orgunit, thw_realm, thw_last_import, thw_import_missing_since'
+    '--div--;LLL:EXT:thw_ovssp/Resources/Private/Language/locallang_db.xlf:fe_users.tab.thw, thw_uid, thw_orgunit, thw_realm, thw_birthdate, thw_portal_access, thw_last_import, thw_import_missing_since'
 );

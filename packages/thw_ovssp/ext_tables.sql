@@ -47,6 +47,8 @@ CREATE TABLE fe_users (
     thw_uid int(11) unsigned NOT NULL DEFAULT 0,
     thw_orgunit int(11) unsigned NOT NULL DEFAULT 0,
     thw_realm varchar(2) NOT NULL DEFAULT '',
+    thw_birthdate date DEFAULT NULL,
+    thw_portal_access tinyint(1) unsigned NOT NULL DEFAULT 0,
     thw_last_import datetime DEFAULT NULL,
     thw_import_missing_since datetime DEFAULT NULL,
 

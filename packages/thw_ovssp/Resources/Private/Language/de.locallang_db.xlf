@@ -80,6 +80,14 @@
                 <source>AD Realm</source>
                 <target>AD-Bereich (HA/EA)</target>
             </trans-unit>
+            <trans-unit id="fe_users.thw_birthdate" resname="fe_users.thw_birthdate">
+                <source>Birth Date</source>
+                <target>Geburtsdatum</target>
+            </trans-unit>
+            <trans-unit id="fe_users.thw_portal_access" resname="fe_users.thw_portal_access">
+                <source>Portal Access</source>
+                <target>Portalzugang</target>
+            </trans-unit>
             <trans-unit id="fe_users.thw_last_import" resname="fe_users.thw_last_import">
                 <source>Last Import</source>
                 <target>Letzter Import</target>
