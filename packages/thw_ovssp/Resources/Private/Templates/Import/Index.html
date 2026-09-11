@@ -1,0 +1,72 @@
+<html xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers"
+      data-namespace-typo3-fluid="true">
+
+<f:section name="Content">
+    <h1><f:translate key="LLL:EXT:thw_ovssp/Resources/Private/Language/locallang_mod.xlf:module.title" /></h1>
+    <p><f:translate key="LLL:EXT:thw_ovssp/Resources/Private/Language/locallang_mod.xlf:module.description" /></p>
+
+    <f:if condition="{errors}">
+        <div class="alert alert-danger">
+            <h4>Import failed</h4>
+            <ul>
+                <f:for each="{errors}" as="error">
+                    <li>{error}</li>
+                </f:for>
+            </ul>
+        </div>
+    </f:if>
+
+    <form method="post" action="{uploadUri}" enctype="multipart/form-data" class="mt-4">
+        <div class="form-group mb-3">
+            <label for="type" class="form-label">
+                <f:translate key="LLL:EXT:thw_ovssp/Resources/Private/Language/locallang_mod.xlf:label.type" />
+            </label>
+            <select name="type" id="type" class="form-select" required>
+                <option value="">-- Select --</option>
+                <option value="orgunits"{f:if(condition: '{selectedType} == \'orgunits\'', then: ' selected')}>
+                    <f:translate key="LLL:EXT:thw_ovssp/Resources/Private/Language/locallang_mod.xlf:label.type.orgunits" />
+                </option>
+                <option value="directories"{f:if(condition: '{selectedType} == \'directories\'', then: ' selected')}>
+                    <f:translate key="LLL:EXT:thw_ovssp/Resources/Private/Language/locallang_mod.xlf:label.type.directories" />
+                </option>
+                <option value="users"{f:if(condition: '{selectedType} == \'users\'', then: ' selected')}>
+                    <f:translate key="LLL:EXT:thw_ovssp/Resources/Private/Language/locallang_mod.xlf:label.type.users" />
+                </option>
+            </select>
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="realm" class="form-label">
+                <f:translate key="LLL:EXT:thw_ovssp/Resources/Private/Language/locallang_mod.xlf:label.realm" />
+            </label>
+            <select name="realm" id="realm" class="form-select">
+                <option value="">-- Not applicable --</option>
+                <option value="HA"{f:if(condition: '{selectedRealm} == \'HA\'', then: ' selected')}>HA (Hauptamt)</option>
+                <option value="EA"{f:if(condition: '{selectedRealm} == \'EA\'', then: ' selected')}>EA (Ehrenamt)</option>
+            </select>
+            <div class="form-text">
+                <f:translate key="LLL:EXT:thw_ovssp/Resources/Private/Language/locallang_mod.xlf:label.realm.help" />
+            </div>
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="importFile" class="form-label">
+                <f:translate key="LLL:EXT:thw_ovssp/Resources/Private/Language/locallang_mod.xlf:label.file" />
+            </label>
+            <input type="file" name="importFile" id="importFile" class="form-control" accept=".csv" required />
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="pid" class="form-label">
+                <f:translate key="LLL:EXT:thw_ovssp/Resources/Private/Language/locallang_mod.xlf:label.pid" />
+            </label>
+            <input type="number" name="pid" id="pid" class="form-control" value="{f:if(condition: pid, then: pid, else: '0')}" min="0" style="max-width: 200px;" />
+        </div>
+
+        <button type="submit" class="btn btn-primary">
+            <f:translate key="LLL:EXT:thw_ovssp/Resources/Private/Language/locallang_mod.xlf:label.submit" />
+        </button>
+    </form>
+</f:section>
+
+</html>

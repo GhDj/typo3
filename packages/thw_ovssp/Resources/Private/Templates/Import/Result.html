@@ -1,0 +1,64 @@
+<html xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers"
+      data-namespace-typo3-fluid="true">
+
+<f:section name="Content">
+    <h1><f:translate key="LLL:EXT:thw_ovssp/Resources/Private/Language/locallang_mod.xlf:result.title" /></h1>
+
+    <f:if condition="{result.success}">
+        <f:then>
+            <div class="alert alert-success">
+                <h4>
+                    <f:translate key="LLL:EXT:thw_ovssp/Resources/Private/Language/locallang_mod.xlf:result.success" />
+                </h4>
+                <p>Type: <strong>{type}</strong>
+                    <f:if condition="{realm}"> | Realm: <strong>{realm}</strong></f:if>
+                </p>
+            </div>
+
+            <table class="table table-bordered" style="max-width: 400px;">
+                <tr>
+                    <td><f:translate key="LLL:EXT:thw_ovssp/Resources/Private/Language/locallang_mod.xlf:result.total" /></td>
+                    <td class="text-end"><strong>{result.total}</strong></td>
+                </tr>
+                <tr>
+                    <td><f:translate key="LLL:EXT:thw_ovssp/Resources/Private/Language/locallang_mod.xlf:result.created" /></td>
+                    <td class="text-end"><strong>{result.created}</strong></td>
+                </tr>
+                <tr>
+                    <td><f:translate key="LLL:EXT:thw_ovssp/Resources/Private/Language/locallang_mod.xlf:result.updated" /></td>
+                    <td class="text-end"><strong>{result.updated}</strong></td>
+                </tr>
+                <tr>
+                    <td><f:translate key="LLL:EXT:thw_ovssp/Resources/Private/Language/locallang_mod.xlf:result.unchanged" /></td>
+                    <td class="text-end"><strong>{result.unchanged}</strong></td>
+                </tr>
+                <f:if condition="{result.deactivated}">
+                    <tr>
+                        <td><f:translate key="LLL:EXT:thw_ovssp/Resources/Private/Language/locallang_mod.xlf:result.deactivated" /></td>
+                        <td class="text-end"><strong>{result.deactivated}</strong></td>
+                    </tr>
+                </f:if>
+            </table>
+        </f:then>
+        <f:else>
+            <div class="alert alert-danger">
+                <h4>
+                    <f:translate key="LLL:EXT:thw_ovssp/Resources/Private/Language/locallang_mod.xlf:result.failed" />
+                </h4>
+                <ul>
+                    <f:for each="{result.errors}" as="error">
+                        <li>{error}</li>
+                    </f:for>
+                </ul>
+            </div>
+        </f:else>
+    </f:if>
+
+    <form method="post" action="{uploadUri}" enctype="multipart/form-data" class="mt-4">
+        <a href="{f:uri.action(action: 'index')}" class="btn btn-default">
+            <f:translate key="LLL:EXT:thw_ovssp/Resources/Private/Language/locallang_mod.xlf:result.back" />
+        </a>
+    </form>
+</f:section>
+
+</html>

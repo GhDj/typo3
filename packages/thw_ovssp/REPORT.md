@@ -5,7 +5,8 @@
 ### 1.1 Extension skeleton
 - `composer.json` with PSR-4 autoload for `Init\Thw\Ovssp`
 - `ext_emconf.php` targeting TYPO3 14.x
-- `Configuration/Services.yaml` with autowire, autoconfigure, and console command registration
+- `Configuration/Services.yaml` with autowire and autoconfigure
+- Backend module registered in `Configuration/Backend/Modules.php` under Admin Tools
 
 ### 1.2 OrgUnit table (`tx_thwovssp_domain_model_orgunit`)
 - Fields: `thw_oe_uid` (unique, immutable), `oe_code` (unique, 4-char), `name`, `mail_address`, `regionalbereich_code` (indexed), `landesverband_code` (indexed), `active`
@@ -30,8 +31,10 @@
 - Persistence mapping for User → `fe_users` in `Configuration/Extbase/Persistence/Classes.php`
 - All repositories extend `\TYPO3\CMS\Extbase\Persistence\Repository`
 
-### 1.6 CSV importer (`ovssp:import`)
-- Symfony Console command: `ddev typo3 ovssp:import --type=users|orgunits|directories --file=<path> [--realm=HA|EA] [--dry-run] [--pid=N]`
+### 1.6 CSV importer (backend module)
+- Backend module under Admin Tools → OV-SSP Import
+- Admin user uploads CSV file via form, selects import type and realm
+- Import logic in `ImportService`, controller handles file upload and result display
 - **OrgUnit import:** validates header and `thw_oe_uid` format, upserts by `thw_oe_uid`, reports created/updated/unchanged
 - **Directory import:** validates header, upserts by `name`, handles nullable `sort_key`
 - **User import (performance-critical):**
@@ -42,20 +45,15 @@
   - Handles BOM, semicolon delimiter, UTF-8
   - Deactivation: after upsert, sets `disable = 1` and `thw_import_missing_since` on users whose `thw_last_import` is older than the current run; re-enables users who reappear
   - New users get `password = '!'` (invalid hash — login only via OIDC)
-  - `--dry-run` reports would-create / would-update / would-deactivate counts
 - Validates before writing: rejects entire run on header mismatch, non-numeric IDs, or unknown OrgUnit references
+- XLIFF labels in German (primary) and English (fallback)
 
 ### 1.6a DirectoryNameService
 - Single-point derivation: `{oe_code}-{directory_name}` (e.g. `OAAC-Allgemein`)
 
 ### 1.7 Fixtures
 - `Tests/Fixtures/` directory ready for the three CSV files
-- Place the CSVs there and run:
-  ```
-  ddev typo3 ovssp:import -t orgunits -f packages/thw_ovssp/Tests/Fixtures/20260907_Testdaten_OV-SSP_OrgUnits_V2.csv --pid=1
-  ddev typo3 ovssp:import -t directories -f packages/thw_ovssp/Tests/Fixtures/20260907_Grunddaten_OV-SSP_Verzeichnisse_Master.csv --pid=1
-  ddev typo3 ovssp:import -t users -f packages/thw_ovssp/Tests/Fixtures/20260907_Testdaten_OV-SSP_User_V2.csv --realm=EA --pid=1
-  ```
+- Use the backend module (Admin Tools → OV-SSP Import) to upload and import them
 
 ## v14 API verification needed
 
@@ -67,7 +65,7 @@
 4. **TCA select `items` format** — using `['label' => '...', 'value' => ...]`. Confirm this is v14 format (not the old numeric array).
 5. **`Configuration/Extbase/Persistence/Classes.php`** — confirm this is still the v14 persistence mapping mechanism.
 6. **`FrontendUser` model** — verify `\TYPO3\CMS\Extbase\Domain\Model\FrontendUser` still exists and check which properties it exposes.
-7. **Console command registration** — verify `console.command` tag in `Services.yaml` is still the mechanism (vs `Configuration/Commands.php` or `#[AsCommand]` attribute).
+7. **Backend module registration** — verify `Configuration/Backend/Modules.php` with `routes` key is the v14 mechanism for non-Extbase backend modules.
 8. **`ext_tables.sql` control fields** — v14 may auto-create `uid`, `pid`, `tstamp`, `crdate`, `deleted`, `hidden`, `sorting` from TCA `ctrl`. If so, remove them from `ext_tables.sql` to avoid schema compare diffs.
 9. **`readOnly` in TCA config** — confirm this key is still at the column config level.
 10. **`ConnectionPool` / `Connection`** — verify the DBAL API hasn't changed in v14.
