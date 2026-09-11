@@ -13,6 +13,11 @@
             "Init\\Thw\\Ovssp\\": "Classes/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "Init\\Thw\\Ovssp\\Tests\\": "Tests/"
+        }
+    },
     "extra": {
         "typo3/cms": {
             "extension-key": "thw_ovssp"
