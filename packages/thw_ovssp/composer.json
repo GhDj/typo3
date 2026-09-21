@@ -22,5 +22,8 @@
         "typo3/cms": {
             "extension-key": "thw_ovssp"
         }
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.0"
     }
 }

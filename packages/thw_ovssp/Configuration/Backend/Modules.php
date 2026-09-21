@@ -3,19 +3,18 @@
 use Init\Thw\Ovssp\Controller\ImportController;
 
 return [
-    'tools_thwovssp_import' => [
-        'parent' => 'tools',
+    'admin_thwovssp_import' => [
+        'parent' => 'admin',
         'position' => ['after' => '*'],
         'access' => 'admin',
-        'labels' => 'LLL:EXT:thw_ovssp/Resources/Private/Language/locallang_mod.xlf',
         'iconIdentifier' => 'module-install',
-        'routes' => [
-            '_default' => [
-                'target' => ImportController::class . '::indexAction',
-            ],
-            'upload' => [
-                'target' => ImportController::class . '::uploadAction',
-                'methods' => ['POST'],
+        'labels' => 'LLL:EXT:thw_ovssp/Resources/Private/Language/locallang_mod.xlf',
+        'path' => '/module/admin/ovssp-import',
+        'extensionName' => 'ThwOvssp',
+        'controllerActions' => [
+            ImportController::class => [
+                'index',
+                'upload',
             ],
         ],
     ],

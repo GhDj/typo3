@@ -7,9 +7,7 @@
     <f:if condition="{result.success}">
         <f:then>
             <div class="alert alert-success">
-                <h4>
-                    <f:translate key="LLL:EXT:thw_ovssp/Resources/Private/Language/locallang_mod.xlf:result.success" />
-                </h4>
+                <h4><f:translate key="LLL:EXT:thw_ovssp/Resources/Private/Language/locallang_mod.xlf:result.success" /></h4>
                 <p>Type: <strong>{type}</strong>
                     <f:if condition="{realm}"> | Realm: <strong>{realm}</strong></f:if>
                 </p>
@@ -42,9 +40,7 @@
         </f:then>
         <f:else>
             <div class="alert alert-danger">
-                <h4>
-                    <f:translate key="LLL:EXT:thw_ovssp/Resources/Private/Language/locallang_mod.xlf:result.failed" />
-                </h4>
+                <h4><f:translate key="LLL:EXT:thw_ovssp/Resources/Private/Language/locallang_mod.xlf:result.failed" /></h4>
                 <ul>
                     <f:for each="{result.errors}" as="error">
                         <li>{error}</li>
@@ -54,11 +50,11 @@
         </f:else>
     </f:if>
 
-    <form method="post" action="{uploadUri}" enctype="multipart/form-data" class="mt-4">
-        <a href="{f:uri.action(action: 'index')}" class="btn btn-default">
+    <div class="mt-4">
+        <f:link.action action="index" class="btn btn-default">
             <f:translate key="LLL:EXT:thw_ovssp/Resources/Private/Language/locallang_mod.xlf:result.back" />
-        </a>
-    </form>
+        </f:link.action>
+    </div>
 </f:section>
 
 </html>

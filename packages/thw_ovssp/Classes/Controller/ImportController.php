@@ -6,36 +6,30 @@ namespace Init\Thw\Ovssp\Controller;
 
 use Init\Thw\Ovssp\Service\ImportService;
 use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
-use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
-use TYPO3\CMS\Core\Http\HtmlResponse;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Fluid\View\StandaloneView;
+use TYPO3\CMS\Extbase\Mvc\Controller\ActionController;
 
-class ImportController
+class ImportController extends ActionController
 {
     public function __construct(
         private readonly ModuleTemplateFactory $moduleTemplateFactory,
         private readonly ImportService $importService,
-    ) {}
+    ) {
+        // parent constructor is not needed in v14 ActionController
+    }
 
-    public function indexAction(ServerRequestInterface $request): ResponseInterface
+    public function indexAction(): ResponseInterface
     {
-        $moduleTemplate = $this->moduleTemplateFactory->create($request);
-        $moduleTemplate->assign('uploadUri', $this->getUploadUri());
+        $moduleTemplate = $this->moduleTemplateFactory->create($this->request);
         return $moduleTemplate->renderResponse('Import/Index');
     }
 
-    public function uploadAction(ServerRequestInterface $request): ResponseInterface
+    public function uploadAction(): ResponseInterface
     {
-        $body = $request->getParsedBody();
-        $type = $body['type'] ?? '';
-        $realm = strtoupper($body['realm'] ?? '');
-        $pid = (int)($body['pid'] ?? 0);
-
-        $uploadedFiles = $request->getUploadedFiles();
-        $uploadedFile = $uploadedFiles['importFile'] ?? null;
+        $type = (string)($this->request->getArgument('type') ?? '');
+        $realm = strtoupper((string)($this->request->getArgument('realm') ?? ''));
+        $pid = (int)($this->request->getArgument('pid') ?? 0);
 
         $errors = [];
 
@@ -47,14 +41,17 @@ class ImportController
             $errors[] = 'AD Realm (HA or EA) is required for user imports.';
         }
 
-        if ($uploadedFile === null || $uploadedFile->getError() !== UPLOAD_ERR_OK) {
+        // Handle file upload via $_FILES (Extbase does not map file uploads automatically)
+        $fileData = $_FILES['tx_thwovssp_import']['tmp_name']['importFile'] ?? null;
+        $fileError = $_FILES['tx_thwovssp_import']['error']['importFile'] ?? UPLOAD_ERR_NO_FILE;
+
+        if ($fileData === null || (int)$fileError !== UPLOAD_ERR_OK) {
             $errors[] = 'Please upload a valid CSV file.';
         }
 
         if (!empty($errors)) {
-            $moduleTemplate = $this->moduleTemplateFactory->create($request);
+            $moduleTemplate = $this->moduleTemplateFactory->create($this->request);
             $moduleTemplate->assignMultiple([
-                'uploadUri' => $this->getUploadUri(),
                 'errors' => $errors,
                 'selectedType' => $type,
                 'selectedRealm' => $realm,
@@ -63,9 +60,9 @@ class ImportController
             return $moduleTemplate->renderResponse('Import/Index');
         }
 
-        // Move uploaded file to a temp path for processing
+        // Copy to a stable temp file for processing
         $tempFile = GeneralUtility::tempnam('ovssp_import_', '.csv');
-        $uploadedFile->moveTo($tempFile);
+        move_uploaded_file($fileData, $tempFile);
 
         try {
             $result = $this->importService->import($tempFile, $type, $realm, $pid);
@@ -73,19 +70,12 @@ class ImportController
             @unlink($tempFile);
         }
 
-        $moduleTemplate = $this->moduleTemplateFactory->create($request);
+        $moduleTemplate = $this->moduleTemplateFactory->create($this->request);
         $moduleTemplate->assignMultiple([
             'result' => $result,
             'type' => $type,
             'realm' => $realm,
-            'uploadUri' => $this->getUploadUri(),
         ]);
         return $moduleTemplate->renderResponse('Import/Result');
-    }
-
-    private function getUploadUri(): string
-    {
-        $uriBuilder = GeneralUtility::makeInstance(UriBuilder::class);
-        return (string)$uriBuilder->buildUriFromRoute('tools_thwovssp_import.upload');
     }
 }
