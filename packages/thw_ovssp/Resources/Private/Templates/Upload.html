@@ -1,4 +1,5 @@
 <html xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers"
+      xmlns:be="http://typo3.org/ns/TYPO3/CMS/Backend/ViewHelpers"
       data-namespace-typo3-fluid="true">
 
 <h1><f:translate key="LLL:EXT:thw_ovssp/Resources/Private/Language/locallang_mod.xlf:result.title" /></h1>
@@ -50,9 +51,9 @@
 </f:if>
 
 <div class="mt-4">
-    <f:link.action action="index" class="btn btn-default">
+    <a href="{be:moduleLink(route: 'admin_thwovssp_import')}" class="btn btn-default">
         <f:translate key="LLL:EXT:thw_ovssp/Resources/Private/Language/locallang_mod.xlf:result.back" />
-    </f:link.action>
+    </a>
 </div>
 
 </html>

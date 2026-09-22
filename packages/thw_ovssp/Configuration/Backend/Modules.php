@@ -10,14 +10,13 @@ return [
         'iconIdentifier' => 'module-install',
         'labels' => 'LLL:EXT:thw_ovssp/Resources/Private/Language/locallang_mod.xlf',
         'path' => '/module/admin/ovssp-import',
-        'extensionName' => 'ThwOvssp',
-        'routeOptions' => [
-            'packageName' => 'thw/thw-ovssp',
-        ],
-        'controllerActions' => [
-            ImportController::class => [
-                'index',
-                'upload',
+        'routes' => [
+            '_default' => [
+                'target' => ImportController::class . '::indexAction',
+            ],
+            'upload' => [
+                'target' => ImportController::class . '::uploadAction',
+                'methods' => ['POST'],
             ],
         ],
     ],

@@ -6,3 +6,6 @@ services:
 
   Init\Thw\Ovssp\:
     resource: '../Classes/*'
+
+  Init\Thw\Ovssp\Controller\ImportController:
+    public: true
