@@ -9,12 +9,6 @@
     <small class="text-muted">({totalCount})</small>
 </h2>
 
-<f:if condition="{isLimited}">
-    <div class="alert alert-warning">
-        Showing first 500 of {totalCount} users.
-    </div>
-</f:if>
-
 <f:if condition="{users}">
     <f:then>
         <div class="table-responsive">
@@ -59,5 +53,7 @@
         <div class="alert alert-info">No users found. Import them first.</div>
     </f:else>
 </f:if>
+
+<f:render partial="Pagination" arguments="{pagination: pagination}" />
 
 </html>

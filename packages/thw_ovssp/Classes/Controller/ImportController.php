@@ -83,63 +83,114 @@ class ImportController
 
     public function listOrgunitsAction(ServerRequestInterface $request): ResponseInterface
     {
+        $page = max(1, (int)($request->getQueryParams()['page'] ?? 1));
+        $perPage = 50;
+        $offset = ($page - 1) * $perPage;
+
         $connection = $this->connectionPool->getConnectionForTable('tx_thwovssp_domain_model_orgunit');
-        $result = $connection->executeQuery(
-            'SELECT * FROM tx_thwovssp_domain_model_orgunit WHERE deleted = 0 ORDER BY name ASC'
-        );
-        $orgunits = $result->fetchAllAssociative();
+
+        $totalCount = (int)$connection->executeQuery(
+            'SELECT COUNT(*) FROM tx_thwovssp_domain_model_orgunit WHERE deleted = 0'
+        )->fetchOne();
+
+        $orgunits = $connection->executeQuery(
+            'SELECT * FROM tx_thwovssp_domain_model_orgunit WHERE deleted = 0 ORDER BY name ASC LIMIT ' . $perPage . ' OFFSET ' . $offset
+        )->fetchAllAssociative();
 
         $moduleTemplate = $this->moduleTemplateFactory->create($request);
         $moduleTemplate->assignMultiple([
             'activeTab' => 'orgunits',
             'orgunits' => $orgunits,
-            'totalCount' => count($orgunits),
+            'totalCount' => $totalCount,
+            'pagination' => $this->buildPagination($page, $perPage, $totalCount, 'admin_thwovssp_import.list-orgunits'),
         ]);
         return $moduleTemplate->renderResponse('ListOrgunits');
     }
 
     public function listDirectoriesAction(ServerRequestInterface $request): ResponseInterface
     {
+        $page = max(1, (int)($request->getQueryParams()['page'] ?? 1));
+        $perPage = 50;
+        $offset = ($page - 1) * $perPage;
+
         $connection = $this->connectionPool->getConnectionForTable('tx_thwovssp_domain_model_directory');
-        $result = $connection->executeQuery(
-            'SELECT * FROM tx_thwovssp_domain_model_directory WHERE deleted = 0 ORDER BY CASE WHEN sort_key IS NULL THEN 1 ELSE 0 END, sort_key ASC, name ASC'
-        );
-        $directories = $result->fetchAllAssociative();
+
+        $totalCount = (int)$connection->executeQuery(
+            'SELECT COUNT(*) FROM tx_thwovssp_domain_model_directory WHERE deleted = 0'
+        )->fetchOne();
+
+        $directories = $connection->executeQuery(
+            'SELECT * FROM tx_thwovssp_domain_model_directory WHERE deleted = 0 ORDER BY CASE WHEN sort_key IS NULL THEN 1 ELSE 0 END, sort_key ASC, name ASC LIMIT ' . $perPage . ' OFFSET ' . $offset
+        )->fetchAllAssociative();
 
         $moduleTemplate = $this->moduleTemplateFactory->create($request);
         $moduleTemplate->assignMultiple([
             'activeTab' => 'directories',
             'directories' => $directories,
-            'totalCount' => count($directories),
+            'totalCount' => $totalCount,
+            'pagination' => $this->buildPagination($page, $perPage, $totalCount, 'admin_thwovssp_import.list-directories'),
         ]);
         return $moduleTemplate->renderResponse('ListDirectories');
     }
 
     public function listUsersAction(ServerRequestInterface $request): ResponseInterface
     {
+        $page = max(1, (int)($request->getQueryParams()['page'] ?? 1));
+        $perPage = 50;
+        $offset = ($page - 1) * $perPage;
+
         $connection = $this->connectionPool->getConnectionForTable('fe_users');
-        $result = $connection->executeQuery(
+
+        $totalCount = (int)$connection->executeQuery(
+            'SELECT COUNT(*) FROM fe_users WHERE deleted = 0 AND thw_uid > 0'
+        )->fetchOne();
+
+        $users = $connection->executeQuery(
             'SELECT u.*, o.name AS orgunit_name, o.oe_code
              FROM fe_users u
              LEFT JOIN tx_thwovssp_domain_model_orgunit o ON u.thw_orgunit = o.uid
              WHERE u.deleted = 0 AND u.thw_uid > 0
              ORDER BY u.last_name ASC, u.first_name ASC
-             LIMIT 500'
-        );
-        $users = $result->fetchAllAssociative();
-
-        $totalResult = $connection->executeQuery(
-            'SELECT COUNT(*) as cnt FROM fe_users WHERE deleted = 0 AND thw_uid > 0'
-        );
-        $totalCount = (int)$totalResult->fetchOne();
+             LIMIT ' . $perPage . ' OFFSET ' . $offset
+        )->fetchAllAssociative();
 
         $moduleTemplate = $this->moduleTemplateFactory->create($request);
         $moduleTemplate->assignMultiple([
             'activeTab' => 'users',
             'users' => $users,
             'totalCount' => $totalCount,
-            'isLimited' => $totalCount > 500,
+            'pagination' => $this->buildPagination($page, $perPage, $totalCount, 'admin_thwovssp_import.list-users'),
         ]);
         return $moduleTemplate->renderResponse('ListUsers');
+    }
+
+    /**
+     * @return array{currentPage: int, totalPages: int, perPage: int, route: string, pages: array}
+     */
+    private function buildPagination(int $currentPage, int $perPage, int $totalCount, string $route): array
+    {
+        $totalPages = max(1, (int)ceil($totalCount / $perPage));
+        $currentPage = min($currentPage, $totalPages);
+
+        $pages = [];
+        for ($i = 1; $i <= $totalPages; $i++) {
+            if ($i <= 2 || $i >= $totalPages - 1 || abs($i - $currentPage) <= 2) {
+                $pages[] = ['number' => $i, 'isCurrent' => $i === $currentPage];
+            } elseif (end($pages) !== null && ($pages[array_key_last($pages)]['number'] ?? 0) !== -1) {
+                $pages[] = ['number' => -1, 'isCurrent' => false]; // ellipsis marker
+            }
+        }
+
+        return [
+            'currentPage' => $currentPage,
+            'totalPages' => $totalPages,
+            'perPage' => $perPage,
+            'route' => $route,
+            'pages' => $pages,
+            'hasPrev' => $currentPage > 1,
+            'hasNext' => $currentPage < $totalPages,
+            'prevPage' => $currentPage - 1,
+            'nextPage' => $currentPage + 1,
+        ];
     }
 }
