@@ -15,14 +15,16 @@ class ImportController extends ActionController
     public function __construct(
         private readonly ModuleTemplateFactory $moduleTemplateFactory,
         private readonly ImportService $importService,
-    ) {
-        // parent constructor is not needed in v14 ActionController
-    }
+    ) {}
 
     public function indexAction(): ResponseInterface
     {
         $moduleTemplate = $this->moduleTemplateFactory->create($this->request);
-        return $moduleTemplate->renderResponse('Import/Index');
+        $this->view->assignMultiple([
+            'showForm' => true,
+        ]);
+        $moduleTemplate->setContent($this->view->render());
+        return $moduleTemplate->renderResponse();
     }
 
     public function uploadAction(): ResponseInterface
@@ -51,13 +53,15 @@ class ImportController extends ActionController
 
         if (!empty($errors)) {
             $moduleTemplate = $this->moduleTemplateFactory->create($this->request);
-            $moduleTemplate->assignMultiple([
+            $this->view->assignMultiple([
+                'showForm' => true,
                 'errors' => $errors,
                 'selectedType' => $type,
                 'selectedRealm' => $realm,
                 'pid' => $pid,
             ]);
-            return $moduleTemplate->renderResponse('Import/Index');
+            $moduleTemplate->setContent($this->view->render());
+            return $moduleTemplate->renderResponse();
         }
 
         // Copy to a stable temp file for processing
@@ -71,11 +75,12 @@ class ImportController extends ActionController
         }
 
         $moduleTemplate = $this->moduleTemplateFactory->create($this->request);
-        $moduleTemplate->assignMultiple([
+        $this->view->assignMultiple([
             'result' => $result,
             'type' => $type,
             'realm' => $realm,
         ]);
-        return $moduleTemplate->renderResponse('Import/Result');
+        $moduleTemplate->setContent($this->view->render());
+        return $moduleTemplate->renderResponse();
     }
 }
