@@ -19,12 +19,9 @@ class ImportController extends ActionController
 
     public function indexAction(): ResponseInterface
     {
-        $moduleTemplate = $this->moduleTemplateFactory->create($this->request);
-        $this->view->assignMultiple([
-            'showForm' => true,
-        ]);
-        $moduleTemplate->setContent($this->view->render());
-        return $moduleTemplate->renderResponse();
+        $view = $this->moduleTemplateFactory->create($this->request);
+        $view->assign('showForm', true);
+        return $view->renderResponse('Import/Index');
     }
 
     public function uploadAction(): ResponseInterface
@@ -43,7 +40,6 @@ class ImportController extends ActionController
             $errors[] = 'AD Realm (HA or EA) is required for user imports.';
         }
 
-        // Handle file upload via $_FILES (Extbase does not map file uploads automatically)
         $fileData = $_FILES['tx_thwovssp_import']['tmp_name']['importFile'] ?? null;
         $fileError = $_FILES['tx_thwovssp_import']['error']['importFile'] ?? UPLOAD_ERR_NO_FILE;
 
@@ -52,19 +48,17 @@ class ImportController extends ActionController
         }
 
         if (!empty($errors)) {
-            $moduleTemplate = $this->moduleTemplateFactory->create($this->request);
-            $this->view->assignMultiple([
+            $view = $this->moduleTemplateFactory->create($this->request);
+            $view->assignMultiple([
                 'showForm' => true,
                 'errors' => $errors,
                 'selectedType' => $type,
                 'selectedRealm' => $realm,
                 'pid' => $pid,
             ]);
-            $moduleTemplate->setContent($this->view->render());
-            return $moduleTemplate->renderResponse();
+            return $view->renderResponse('Import/Index');
         }
 
-        // Copy to a stable temp file for processing
         $tempFile = GeneralUtility::tempnam('ovssp_import_', '.csv');
         move_uploaded_file($fileData, $tempFile);
 
@@ -74,13 +68,12 @@ class ImportController extends ActionController
             @unlink($tempFile);
         }
 
-        $moduleTemplate = $this->moduleTemplateFactory->create($this->request);
-        $this->view->assignMultiple([
+        $view = $this->moduleTemplateFactory->create($this->request);
+        $view->assignMultiple([
             'result' => $result,
             'type' => $type,
             'realm' => $realm,
         ]);
-        $moduleTemplate->setContent($this->view->render());
-        return $moduleTemplate->renderResponse();
+        return $view->renderResponse('Import/Upload');
     }
 }

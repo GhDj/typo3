@@ -1,0 +1,57 @@
+<html xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers"
+      data-namespace-typo3-fluid="true">
+
+<h1><f:translate key="LLL:EXT:thw_ovssp/Resources/Private/Language/locallang_mod.xlf:module.title" /></h1>
+<p><f:translate key="LLL:EXT:thw_ovssp/Resources/Private/Language/locallang_mod.xlf:module.description" /></p>
+
+<f:if condition="{errors}">
+    <div class="alert alert-danger">
+        <h4><f:translate key="LLL:EXT:thw_ovssp/Resources/Private/Language/locallang_mod.xlf:result.failed" /></h4>
+        <ul>
+            <f:for each="{errors}" as="error">
+                <li>{error}</li>
+            </f:for>
+        </ul>
+    </div>
+</f:if>
+
+<f:form action="upload" method="post" enctype="multipart/form-data">
+    <div class="form-group mb-3">
+        <label for="type" class="form-label">
+            <f:translate key="LLL:EXT:thw_ovssp/Resources/Private/Language/locallang_mod.xlf:label.type" />
+        </label>
+        <f:form.select name="type" id="type" class="form-select" value="{selectedType}"
+            options="{orgunits: 'Organizational Units', directories: 'Directories', users: 'Users'}"
+            prependOptionLabel="-- Select --" required="required" />
+    </div>
+
+    <div class="form-group mb-3">
+        <label for="realm" class="form-label">
+            <f:translate key="LLL:EXT:thw_ovssp/Resources/Private/Language/locallang_mod.xlf:label.realm" />
+        </label>
+        <f:form.select name="realm" id="realm" class="form-select" value="{selectedRealm}"
+            options="{HA: 'HA (Hauptamt)', EA: 'EA (Ehrenamt)'}"
+            prependOptionLabel="-- Not applicable --" />
+        <div class="form-text">
+            <f:translate key="LLL:EXT:thw_ovssp/Resources/Private/Language/locallang_mod.xlf:label.realm.help" />
+        </div>
+    </div>
+
+    <div class="form-group mb-3">
+        <label for="importFile" class="form-label">
+            <f:translate key="LLL:EXT:thw_ovssp/Resources/Private/Language/locallang_mod.xlf:label.file" />
+        </label>
+        <input type="file" name="tx_thwovssp_import[importFile]" id="importFile" class="form-control" accept=".csv" required="required" />
+    </div>
+
+    <div class="form-group mb-3">
+        <label for="pid" class="form-label">
+            <f:translate key="LLL:EXT:thw_ovssp/Resources/Private/Language/locallang_mod.xlf:label.pid" />
+        </label>
+        <f:form.textfield name="pid" id="pid" class="form-control" value="{f:if(condition: pid, then: pid, else: '0')}" additionalAttributes="{style: 'max-width: 200px'}" />
+    </div>
+
+    <f:form.submit value="Start Import" class="btn btn-primary" />
+</f:form>
+
+</html>
