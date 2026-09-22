@@ -11,6 +11,9 @@ return [
         'labels' => 'LLL:EXT:thw_ovssp/Resources/Private/Language/locallang_mod.xlf',
         'path' => '/module/admin/ovssp-import',
         'extensionName' => 'ThwOvssp',
+        'routeOptions' => [
+            'packageName' => 'thw/thw-ovssp',
+        ],
         'controllerActions' => [
             ImportController::class => [
                 'index',
