@@ -51,7 +51,7 @@ class ImportService
         $rows = [];
         $errors = [];
         $lineNum = 1;
-        while (($fields = fgetcsv($handle, 0, ';')) !== false) {
+        while (($fields = fgetcsv($handle, 0, ';', '"', '')) !== false) {
             $lineNum++;
             if (count($fields) < 6) {
                 $errors[] = "Line $lineNum: expected 6 fields, got " . count($fields);
@@ -148,7 +148,7 @@ class ImportService
         $rows = [];
         $errors = [];
         $lineNum = 1;
-        while (($fields = fgetcsv($handle, 0, ';')) !== false) {
+        while (($fields = fgetcsv($handle, 0, ';', '"', '')) !== false) {
             $lineNum++;
             if (count($fields) < 5) {
                 $errors[] = "Line $lineNum: expected 5 fields, got " . count($fields);
@@ -256,7 +256,7 @@ class ImportService
         $errors = [];
         $totalRows = 0;
         $lineNum = 1;
-        while (($fields = fgetcsv($handle, 0, ';')) !== false) {
+        while (($fields = fgetcsv($handle, 0, ';', '"', '')) !== false) {
             $lineNum++;
             $totalRows++;
             if (count($fields) < 5) {
@@ -294,7 +294,7 @@ class ImportService
         $updated = 0;
         $batch = [];
 
-        while (($fields = fgetcsv($handle, 0, ';')) !== false) {
+        while (($fields = fgetcsv($handle, 0, ';', '"', '')) !== false) {
             $thwUid = (int)$fields[0];
             $username = trim($fields[1]);
             $firstName = trim($fields[2]);
@@ -398,7 +398,7 @@ class ImportService
      */
     private function readHeader($handle): array
     {
-        $header = fgetcsv($handle, 0, ';');
+        $header = fgetcsv($handle, 0, ';', '"', '');
         if ($header === false) {
             return [];
         }
