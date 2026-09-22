@@ -8,24 +8,19 @@ use Init\Thw\Ovssp\Service\ImportService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
-use TYPO3\CMS\Core\Http\HtmlResponse;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Core\View\ViewFactoryData;
-use TYPO3\CMS\Core\View\ViewFactoryInterface;
 
 class ImportController
 {
     public function __construct(
         private readonly ModuleTemplateFactory $moduleTemplateFactory,
         private readonly ImportService $importService,
-        private readonly ViewFactoryInterface $viewFactory,
     ) {}
 
     public function indexAction(ServerRequestInterface $request): ResponseInterface
     {
-        $view = $this->createView($request, 'Index');
-        $html = $view->render();
-        return new HtmlResponse($this->wrapInModuleBody($request, $html));
+        $moduleTemplate = $this->moduleTemplateFactory->create($request);
+        return $moduleTemplate->renderResponse('Index');
     }
 
     public function uploadAction(ServerRequestInterface $request): ResponseInterface
@@ -53,15 +48,14 @@ class ImportController
         }
 
         if (!empty($errors)) {
-            $view = $this->createView($request, 'Index');
-            $view->assignMultiple([
+            $moduleTemplate = $this->moduleTemplateFactory->create($request);
+            $moduleTemplate->assignMultiple([
                 'errors' => $errors,
                 'selectedType' => $type,
                 'selectedRealm' => $realm,
                 'pid' => $pid,
             ]);
-            $html = $view->render();
-            return new HtmlResponse($this->wrapInModuleBody($request, $html));
+            return $moduleTemplate->renderResponse('Index');
         }
 
         $tempFile = GeneralUtility::tempnam('ovssp_import_', '.csv');
@@ -73,30 +67,12 @@ class ImportController
             @unlink($tempFile);
         }
 
-        $view = $this->createView($request, 'Upload');
-        $view->assignMultiple([
+        $moduleTemplate = $this->moduleTemplateFactory->create($request);
+        $moduleTemplate->assignMultiple([
             'result' => $result,
             'type' => $type,
             'realm' => $realm,
         ]);
-        $html = $view->render();
-        return new HtmlResponse($this->wrapInModuleBody($request, $html));
-    }
-
-    private function createView(ServerRequestInterface $request, string $template): \TYPO3\CMS\Core\View\ViewInterface
-    {
-        $viewData = new ViewFactoryData(
-            templatePathAndFilename: 'EXT:thw_ovssp/Resources/Private/Templates/' . $template . '.html',
-            request: $request,
-        );
-        return $this->viewFactory->create($viewData);
-    }
-
-    private function wrapInModuleBody(ServerRequestInterface $request, string $body): string
-    {
-        $moduleTemplate = $this->moduleTemplateFactory->create($request);
-        $moduleTemplate->assign('content', $body);
-        // Use render() to get the module chrome as a string
-        return $moduleTemplate->render();
+        return $moduleTemplate->renderResponse('Upload');
     }
 }

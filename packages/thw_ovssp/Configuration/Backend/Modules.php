@@ -10,6 +10,9 @@ return [
         'iconIdentifier' => 'module-install',
         'labels' => 'LLL:EXT:thw_ovssp/Resources/Private/Language/locallang_mod.xlf',
         'path' => '/module/admin/ovssp-import',
+        'routeOptions' => [
+            'packageName' => 'thw/thw-ovssp',
+        ],
         'routes' => [
             '_default' => [
                 'target' => ImportController::class . '::indexAction',
