@@ -55,6 +55,22 @@
                 <source>Start Import</source>
                 <target>Import starten</target>
             </trans-unit>
+            <trans-unit id="tab.import" resname="tab.import">
+                <source>Import</source>
+                <target>Import</target>
+            </trans-unit>
+            <trans-unit id="tab.orgunits" resname="tab.orgunits">
+                <source>Organizational Units</source>
+                <target>Organisationseinheiten</target>
+            </trans-unit>
+            <trans-unit id="tab.directories" resname="tab.directories">
+                <source>Directories</source>
+                <target>Verzeichnisse</target>
+            </trans-unit>
+            <trans-unit id="tab.users" resname="tab.users">
+                <source>Users</source>
+                <target>Benutzer</target>
+            </trans-unit>
             <trans-unit id="result.title" resname="result.title">
                 <source>Import Result</source>
                 <target>Import-Ergebnis</target>

@@ -1,0 +1,54 @@
+<html xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers"
+      xmlns:be="http://typo3.org/ns/TYPO3/CMS/Backend/ViewHelpers"
+      data-namespace-typo3-fluid="true">
+
+<f:render partial="Navigation" arguments="{activeTab: activeTab}" />
+
+<h2>
+    <f:translate key="LLL:EXT:thw_ovssp/Resources/Private/Language/locallang_mod.xlf:tab.directories" />
+    <small class="text-muted">({totalCount})</small>
+</h2>
+
+<f:if condition="{directories}">
+    <f:then>
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>Sort</th>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>Read</th>
+                        <th>Write</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <f:for each="{directories}" as="dir">
+                        <tr>
+                            <td>{dir.sort_key}</td>
+                            <td><strong>{dir.name}</strong></td>
+                            <td>{dir.description}</td>
+                            <td>
+                                <f:if condition="{dir.allows_read}">
+                                    <f:then><span class="badge bg-success">Yes</span></f:then>
+                                    <f:else><span class="badge bg-secondary">No</span></f:else>
+                                </f:if>
+                            </td>
+                            <td>
+                                <f:if condition="{dir.allows_write}">
+                                    <f:then><span class="badge bg-success">Yes</span></f:then>
+                                    <f:else><span class="badge bg-secondary">No</span></f:else>
+                                </f:if>
+                            </td>
+                        </tr>
+                    </f:for>
+                </tbody>
+            </table>
+        </div>
+    </f:then>
+    <f:else>
+        <div class="alert alert-info">No directories found. Import them first.</div>
+    </f:else>
+</f:if>
+
+</html>

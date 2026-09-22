@@ -42,6 +42,18 @@
             <trans-unit id="label.submit" resname="label.submit">
                 <source>Start Import</source>
             </trans-unit>
+            <trans-unit id="tab.import" resname="tab.import">
+                <source>Import</source>
+            </trans-unit>
+            <trans-unit id="tab.orgunits" resname="tab.orgunits">
+                <source>Organizational Units</source>
+            </trans-unit>
+            <trans-unit id="tab.directories" resname="tab.directories">
+                <source>Directories</source>
+            </trans-unit>
+            <trans-unit id="tab.users" resname="tab.users">
+                <source>Users</source>
+            </trans-unit>
             <trans-unit id="result.title" resname="result.title">
                 <source>Import Result</source>
             </trans-unit>

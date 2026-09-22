@@ -1,0 +1,32 @@
+<html xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers"
+      xmlns:be="http://typo3.org/ns/TYPO3/CMS/Backend/ViewHelpers"
+      data-namespace-typo3-fluid="true">
+
+<ul class="nav nav-tabs mb-4">
+    <li class="nav-item">
+        <a class="nav-link{f:if(condition: '{activeTab} == \'import\'', then: ' active')}"
+           href="{be:moduleLink(route: 'admin_thwovssp_import')}">
+            <f:translate key="LLL:EXT:thw_ovssp/Resources/Private/Language/locallang_mod.xlf:tab.import" />
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link{f:if(condition: '{activeTab} == \'orgunits\'', then: ' active')}"
+           href="{be:moduleLink(route: 'admin_thwovssp_import.list-orgunits')}">
+            <f:translate key="LLL:EXT:thw_ovssp/Resources/Private/Language/locallang_mod.xlf:tab.orgunits" />
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link{f:if(condition: '{activeTab} == \'directories\'', then: ' active')}"
+           href="{be:moduleLink(route: 'admin_thwovssp_import.list-directories')}">
+            <f:translate key="LLL:EXT:thw_ovssp/Resources/Private/Language/locallang_mod.xlf:tab.directories" />
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link{f:if(condition: '{activeTab} == \'users\'', then: ' active')}"
+           href="{be:moduleLink(route: 'admin_thwovssp_import.list-users')}">
+            <f:translate key="LLL:EXT:thw_ovssp/Resources/Private/Language/locallang_mod.xlf:tab.users" />
+        </a>
+    </li>
+</ul>
+
+</html>

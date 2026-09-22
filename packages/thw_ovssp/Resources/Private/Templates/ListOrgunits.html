@@ -1,0 +1,53 @@
+<html xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers"
+      xmlns:be="http://typo3.org/ns/TYPO3/CMS/Backend/ViewHelpers"
+      data-namespace-typo3-fluid="true">
+
+<f:render partial="Navigation" arguments="{activeTab: activeTab}" />
+
+<h2>
+    <f:translate key="LLL:EXT:thw_ovssp/Resources/Private/Language/locallang_mod.xlf:tab.orgunits" />
+    <small class="text-muted">({totalCount})</small>
+</h2>
+
+<f:if condition="{orgunits}">
+    <f:then>
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>THW OE UID</th>
+                        <th>Code</th>
+                        <th>Name</th>
+                        <th>E-Mail</th>
+                        <th>Regionalbereich</th>
+                        <th>Landesverband</th>
+                        <th>Active</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <f:for each="{orgunits}" as="ou">
+                        <tr>
+                            <td>{ou.thw_oe_uid}</td>
+                            <td><strong>{ou.oe_code}</strong></td>
+                            <td>{ou.name}</td>
+                            <td>{ou.mail_address}</td>
+                            <td>{ou.regionalbereich_code}</td>
+                            <td>{ou.landesverband_code}</td>
+                            <td>
+                                <f:if condition="{ou.active}">
+                                    <f:then><span class="badge bg-success">Yes</span></f:then>
+                                    <f:else><span class="badge bg-secondary">No</span></f:else>
+                                </f:if>
+                            </td>
+                        </tr>
+                    </f:for>
+                </tbody>
+            </table>
+        </div>
+    </f:then>
+    <f:else>
+        <div class="alert alert-info">No organizational units found. Import them first.</div>
+    </f:else>
+</f:if>
+
+</html>

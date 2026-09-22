@@ -1,0 +1,63 @@
+<html xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers"
+      xmlns:be="http://typo3.org/ns/TYPO3/CMS/Backend/ViewHelpers"
+      data-namespace-typo3-fluid="true">
+
+<f:render partial="Navigation" arguments="{activeTab: activeTab}" />
+
+<h2>
+    <f:translate key="LLL:EXT:thw_ovssp/Resources/Private/Language/locallang_mod.xlf:tab.users" />
+    <small class="text-muted">({totalCount})</small>
+</h2>
+
+<f:if condition="{isLimited}">
+    <div class="alert alert-warning">
+        Showing first 500 of {totalCount} users.
+    </div>
+</f:if>
+
+<f:if condition="{users}">
+    <f:then>
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>THW UID</th>
+                        <th>Username</th>
+                        <th>Name</th>
+                        <th>OE</th>
+                        <th>Realm</th>
+                        <th>Active</th>
+                        <th>Last Import</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <f:for each="{users}" as="user">
+                        <tr class="{f:if(condition: user.disable, then: 'table-secondary')}">
+                            <td>{user.thw_uid}</td>
+                            <td><strong>{user.username}</strong></td>
+                            <td>{user.first_name} {user.last_name}</td>
+                            <td>
+                                <f:if condition="{user.oe_code}">
+                                    <span title="{user.orgunit_name}">{user.oe_code}</span>
+                                </f:if>
+                            </td>
+                            <td>{user.thw_realm}</td>
+                            <td>
+                                <f:if condition="{user.disable}">
+                                    <f:then><span class="badge bg-secondary">Disabled</span></f:then>
+                                    <f:else><span class="badge bg-success">Active</span></f:else>
+                                </f:if>
+                            </td>
+                            <td>{user.thw_last_import}</td>
+                        </tr>
+                    </f:for>
+                </tbody>
+            </table>
+        </div>
+    </f:then>
+    <f:else>
+        <div class="alert alert-info">No users found. Import them first.</div>
+    </f:else>
+</f:if>
+
+</html>

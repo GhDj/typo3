@@ -21,6 +21,15 @@ return [
                 'target' => ImportController::class . '::uploadAction',
                 'methods' => ['POST'],
             ],
+            'list-orgunits' => [
+                'target' => ImportController::class . '::listOrgunitsAction',
+            ],
+            'list-directories' => [
+                'target' => ImportController::class . '::listDirectoriesAction',
+            ],
+            'list-users' => [
+                'target' => ImportController::class . '::listUsersAction',
+            ],
         ],
     ],
 ];
