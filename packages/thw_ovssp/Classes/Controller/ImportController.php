@@ -21,7 +21,7 @@ class ImportController extends ActionController
     {
         $view = $this->moduleTemplateFactory->create($this->request);
         $view->assign('showForm', true);
-        return $view->renderResponse('Import/Index');
+        return $view->renderResponse('Index');
     }
 
     public function uploadAction(): ResponseInterface
@@ -56,7 +56,7 @@ class ImportController extends ActionController
                 'selectedRealm' => $realm,
                 'pid' => $pid,
             ]);
-            return $view->renderResponse('Import/Index');
+            return $view->renderResponse('Index');
         }
 
         $tempFile = GeneralUtility::tempnam('ovssp_import_', '.csv');
@@ -74,6 +74,6 @@ class ImportController extends ActionController
             'type' => $type,
             'realm' => $realm,
         ]);
-        return $view->renderResponse('Import/Upload');
+        return $view->renderResponse('Upload');
     }
 }
