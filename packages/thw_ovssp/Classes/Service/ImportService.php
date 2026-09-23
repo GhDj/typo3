@@ -237,7 +237,6 @@ class ImportService
             return $this->errorResult(['No OrgUnits found in the database. Import OrgUnits first.']);
         }
 
-        // First pass: validate entire file
         $handle = $this->openCsv($filePath);
         if ($handle === false) {
             return $this->errorResult(['Could not open CSV file']);
@@ -253,57 +252,52 @@ class ImportService
             )]);
         }
 
-        $errors = [];
-        $totalRows = 0;
-        $lineNum = 1;
-        while (($fields = fgetcsv($handle, 0, ';', '"', '')) !== false) {
-            $lineNum++;
-            $totalRows++;
-            if (count($fields) < 5) {
-                $errors[] = "Line $lineNum: expected 5 fields, got " . count($fields);
-                continue;
-            }
-            $thwUid = $fields[0];
-            $thwOeUid = $fields[4];
-            if (!ctype_digit($thwUid)) {
-                $errors[] = "Line $lineNum: thw_uid '$thwUid' is not numeric";
-            }
-            if (!ctype_digit($thwOeUid)) {
-                $errors[] = "Line $lineNum: thw_oe_uid '$thwOeUid' is not numeric";
-            } elseif (!isset($orgUnitMap[(int)$thwOeUid])) {
-                $errors[] = "Line $lineNum: thw_oe_uid '$thwOeUid' not found in OrgUnit table";
-            }
-            if (count($errors) > 50) {
-                $errors[] = '... stopping validation after 50 errors';
-                break;
-            }
-        }
-        fclose($handle);
-
-        if (!empty($errors)) {
-            return $this->errorResult($errors);
-        }
-
-        // Second pass: upsert in batches
-        $handle = $this->openCsv($filePath);
-        $this->readHeader($handle);
-
+        // Single pass: validate each row, skip invalid, upsert valid rows in batches
         $now = time();
         $nowDatetime = date('Y-m-d H:i:s');
         $created = 0;
         $updated = 0;
+        $skipped = 0;
+        $totalRows = 0;
+        $skippedErrors = [];
         $batch = [];
+        $lineNum = 1;
 
         while (($fields = fgetcsv($handle, 0, ';', '"', '')) !== false) {
-            $thwUid = (int)$fields[0];
-            $username = trim($fields[1]);
-            $firstName = trim($fields[2]);
-            $lastName = trim($fields[3]);
-            $thwOeUid = (int)$fields[4];
+            $lineNum++;
+            $totalRows++;
+
+            // Validate row
+            if (count($fields) < 5) {
+                $skipped++;
+                if (count($skippedErrors) < 50) {
+                    $skippedErrors[] = "Line $lineNum: expected 5 fields, got " . count($fields);
+                }
+                continue;
+            }
+
+            $thwUid = trim($fields[0]);
+            $thwOeUid = trim($fields[4]);
+
+            if (!ctype_digit($thwUid)) {
+                $skipped++;
+                if (count($skippedErrors) < 50) {
+                    $skippedErrors[] = "Line $lineNum: thw_uid '$thwUid' is not numeric — skipped";
+                }
+                continue;
+            }
+
+            if (!ctype_digit($thwOeUid) || !isset($orgUnitMap[(int)$thwOeUid])) {
+                $skipped++;
+                if (count($skippedErrors) < 50) {
+                    $skippedErrors[] = "Line $lineNum: thw_oe_uid '$thwOeUid' invalid or not found — skipped";
+                }
+                continue;
+            }
 
             $batch[] = [
-                $pid, $now, $now, $thwUid, $username, '!',
-                $firstName, $lastName, $orgUnitMap[$thwOeUid], $realm, $nowDatetime,
+                $pid, $now, $now, (int)$thwUid, trim($fields[1]), '!',
+                trim($fields[2]), trim($fields[3]), $orgUnitMap[(int)$thwOeUid], $realm, $nowDatetime,
             ];
 
             if (count($batch) >= self::BATCH_SIZE) {
@@ -334,9 +328,13 @@ class ImportService
             [$nowDatetime, $now, $realm, $nowDatetime]
         );
 
+        if (count($skippedErrors) < $skipped) {
+            $skippedErrors[] = '... and ' . ($skipped - count($skippedErrors)) . ' more skipped rows';
+        }
+
         // TODO Phase 2: write audit/history entry for this import run
 
-        return ['success' => true, 'total' => $totalRows, 'created' => $created, 'updated' => $updated, 'unchanged' => 0, 'deactivated' => $deactivated, 'errors' => []];
+        return ['success' => true, 'total' => $totalRows, 'created' => $created, 'updated' => $updated, 'unchanged' => 0, 'deactivated' => $deactivated, 'skipped' => $skipped, 'errors' => $skippedErrors];
     }
 
     /**

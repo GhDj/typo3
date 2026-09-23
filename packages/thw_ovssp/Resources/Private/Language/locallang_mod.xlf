@@ -78,6 +78,12 @@
             <trans-unit id="result.deactivated" resname="result.deactivated">
                 <source>Deactivated</source>
             </trans-unit>
+            <trans-unit id="result.skipped" resname="result.skipped">
+                <source>Skipped</source>
+            </trans-unit>
+            <trans-unit id="result.skipped.details" resname="result.skipped.details">
+                <source>Skipped rows details</source>
+            </trans-unit>
             <trans-unit id="result.back" resname="result.back">
                 <source>Back to Import</source>
             </trans-unit>

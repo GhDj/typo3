@@ -103,6 +103,14 @@
                 <source>Deactivated</source>
                 <target>Deaktiviert</target>
             </trans-unit>
+            <trans-unit id="result.skipped" resname="result.skipped">
+                <source>Skipped</source>
+                <target>Übersprungen</target>
+            </trans-unit>
+            <trans-unit id="result.skipped.details" resname="result.skipped.details">
+                <source>Skipped rows details</source>
+                <target>Details zu übersprungenen Zeilen</target>
+            </trans-unit>
             <trans-unit id="result.back" resname="result.back">
                 <source>Back to Import</source>
                 <target>Zurück zum Import</target>

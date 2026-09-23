@@ -38,7 +38,24 @@
                     <td class="text-end"><strong>{result.deactivated}</strong></td>
                 </tr>
             </f:if>
+            <f:if condition="{result.skipped}">
+                <tr class="table-warning">
+                    <td><f:translate key="LLL:EXT:thw_ovssp/Resources/Private/Language/locallang_mod.xlf:result.skipped" /></td>
+                    <td class="text-end"><strong>{result.skipped}</strong></td>
+                </tr>
+            </f:if>
         </table>
+
+        <f:if condition="{result.errors}">
+            <details class="mt-3">
+                <summary class="text-warning"><f:translate key="LLL:EXT:thw_ovssp/Resources/Private/Language/locallang_mod.xlf:result.skipped.details" /> ({result.skipped})</summary>
+                <ul class="mt-2 small">
+                    <f:for each="{result.errors}" as="error">
+                        <li>{error}</li>
+                    </f:for>
+                </ul>
+            </details>
+        </f:if>
     </f:then>
     <f:else>
         <div class="alert alert-danger">
