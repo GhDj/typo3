@@ -218,7 +218,7 @@ class ImportController
         for ($i = 1; $i <= $totalPages; $i++) {
             if ($i <= 2 || $i >= $totalPages - 1 || abs($i - $currentPage) <= 2) {
                 $pages[] = ['number' => $i, 'isCurrent' => $i === $currentPage];
-            } elseif (end($pages) !== null && ($pages[array_key_last($pages)]['number'] ?? 0) !== -1) {
+            } elseif ($pages !== [] && ($pages[array_key_last($pages)]['number'] ?? 0) !== -1) {
                 $pages[] = ['number' => -1, 'isCurrent' => false]; // ellipsis marker
             }
         }

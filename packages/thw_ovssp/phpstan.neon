@@ -1,0 +1,10 @@
+parameters:
+    level: 6
+    paths:
+        - Classes
+    scanDirectories:
+        - vendor/typo3/cms-core/Classes
+        - vendor/typo3/cms-extbase/Classes
+        - vendor/typo3/cms-backend/Classes
+        - vendor/typo3/cms-fluid/Classes
+    treatPhpDocTypesAsCertain: false
