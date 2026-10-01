@@ -31,6 +31,9 @@ class ImportService
         };
     }
 
+    /**
+     * @return array{success: bool, total: int, created: int, updated: int, unchanged: int, deactivated: int, skipped: int, errors: list<string>}
+     */
     private function importOrgUnits(string $filePath, int $pid): array
     {
         $handle = $this->openCsv($filePath);
@@ -57,8 +60,8 @@ class ImportService
                 $errors[] = "Line $lineNum: expected 6 fields, got " . count($fields);
                 continue;
             }
-            $thwOeUid = $fields[0];
-            $oeCode = trim($fields[1]);
+            $thwOeUid = trim((string)$fields[0]);
+            $oeCode = trim((string)$fields[1]);
             if (!ctype_digit($thwOeUid)) {
                 $errors[] = "Line $lineNum: thw_oe_uid '$thwOeUid' is not numeric";
                 continue;
@@ -70,10 +73,10 @@ class ImportService
             $rows[] = [
                 'thw_oe_uid' => (int)$thwOeUid,
                 'oe_code' => $oeCode,
-                'name' => trim($fields[2]),
-                'mail_address' => trim($fields[3]),
-                'regionalbereich_code' => trim($fields[4]),
-                'landesverband_code' => trim($fields[5]),
+                'name' => trim((string)$fields[2]),
+                'mail_address' => trim((string)$fields[3]),
+                'regionalbereich_code' => trim((string)$fields[4]),
+                'landesverband_code' => trim((string)$fields[5]),
             ];
         }
         fclose($handle);
@@ -94,7 +97,7 @@ class ImportService
         $existingRows = $qb
             ->select('uid', 'thw_oe_uid', 'oe_code', 'name', 'mail_address', 'regionalbereich_code', 'landesverband_code')
             ->from($tableName)
-            ->where($qb->expr()->eq('deleted', 0))
+            ->where($qb->expr()->eq('deleted', $qb->createNamedParameter(0, Connection::PARAM_INT)))
             ->executeQuery()
             ->fetchAllAssociative();
 
@@ -144,6 +147,9 @@ class ImportService
         return ['success' => true, 'total' => count($rows), 'created' => $created, 'updated' => $updated, 'unchanged' => $unchanged, 'deactivated' => 0, 'skipped' => 0, 'errors' => []];
     }
 
+    /**
+     * @return array{success: bool, total: int, created: int, updated: int, unchanged: int, deactivated: int, skipped: int, errors: list<string>}
+     */
     private function importDirectories(string $filePath, int $pid): array
     {
         $handle = $this->openCsv($filePath);
@@ -170,18 +176,18 @@ class ImportService
                 $errors[] = "Line $lineNum: expected 5 fields, got " . count($fields);
                 continue;
             }
-            $name = trim($fields[0]);
+            $name = trim((string)$fields[0]);
             if ($name === '') {
                 $errors[] = "Line $lineNum: directory name is empty";
                 continue;
             }
-            $sortKey = trim($fields[3]);
+            $sortKey = trim((string)$fields[3]);
             $rows[] = [
                 'name' => $name,
-                'allows_read' => (int)trim($fields[1]),
-                'allows_write' => (int)trim($fields[2]),
+                'allows_read' => (int)trim((string)$fields[1]),
+                'allows_write' => (int)trim((string)$fields[2]),
                 'sort_key' => ($sortKey !== '') ? (int)$sortKey : null,
-                'description' => trim($fields[4]),
+                'description' => trim((string)$fields[4]),
             ];
         }
         fclose($handle);
@@ -201,7 +207,7 @@ class ImportService
         $existingRows = $qb
             ->select('uid', 'name', 'allows_read', 'allows_write', 'sort_key', 'description')
             ->from($tableName)
-            ->where($qb->expr()->eq('deleted', 0))
+            ->where($qb->expr()->eq('deleted', $qb->createNamedParameter(0, Connection::PARAM_INT)))
             ->executeQuery()
             ->fetchAllAssociative();
 
@@ -248,6 +254,9 @@ class ImportService
         return ['success' => true, 'total' => count($rows), 'created' => $created, 'updated' => $updated, 'unchanged' => $unchanged, 'deactivated' => 0, 'skipped' => 0, 'errors' => []];
     }
 
+    /**
+     * @return array{success: bool, total: int, created: int, updated: int, unchanged: int, deactivated: int, skipped: int, errors: list<string>}
+     */
     private function importUsers(string $filePath, string $realm, int $pid): array
     {
         // Pre-load OrgUnit map: thw_oe_uid -> TYPO3 uid
@@ -257,7 +266,7 @@ class ImportService
         $ouRows = $qb
             ->select('uid', 'thw_oe_uid')
             ->from('tx_thwovssp_domain_model_orgunit')
-            ->where($qb->expr()->eq('deleted', 0))
+            ->where($qb->expr()->eq('deleted', $qb->createNamedParameter(0, Connection::PARAM_INT)))
             ->executeQuery()
             ->fetchAllAssociative();
 
@@ -292,9 +301,9 @@ class ImportService
             ->select('uid', 'thw_uid')
             ->from('fe_users')
             ->where(
-                $qb->expr()->eq('deleted', 0),
+                $qb->expr()->eq('deleted', $qb->createNamedParameter(0, Connection::PARAM_INT)),
                 $qb->expr()->eq('thw_realm', $qb->createNamedParameter($realm)),
-                $qb->expr()->gt('thw_uid', 0)
+                $qb->expr()->gt('thw_uid', $qb->createNamedParameter(0, Connection::PARAM_INT))
             )
             ->executeQuery()
             ->fetchAllAssociative();
@@ -324,8 +333,8 @@ class ImportService
                 continue;
             }
 
-            $thwUid = trim($fields[0]);
-            $thwOeUid = trim($fields[4]);
+            $thwUid = trim((string)$fields[0]);
+            $thwOeUid = trim((string)$fields[4]);
 
             if (!ctype_digit($thwUid)) {
                 $skipped++;
@@ -344,9 +353,9 @@ class ImportService
             }
 
             $thwUidInt = (int)$thwUid;
-            $username = trim($fields[1]);
-            $firstName = trim($fields[2]);
-            $lastName = trim($fields[3]);
+            $username = trim((string)$fields[1]);
+            $firstName = trim((string)$fields[2]);
+            $lastName = trim((string)$fields[3]);
             $orgUnitUid = $orgUnitMap[(int)$thwOeUid];
 
             if (isset($existingUsers[$thwUidInt])) {
@@ -401,8 +410,8 @@ class ImportService
                     $qb->expr()->isNull('thw_last_import'),
                     $qb->expr()->lt('thw_last_import', $qb->createNamedParameter($nowDatetime))
                 ),
-                $qb->expr()->eq('deleted', 0),
-                $qb->expr()->gt('thw_uid', 0)
+                $qb->expr()->eq('deleted', $qb->createNamedParameter(0, Connection::PARAM_INT)),
+                $qb->expr()->gt('thw_uid', $qb->createNamedParameter(0, Connection::PARAM_INT))
             )
             ->executeStatement();
 
@@ -433,6 +442,7 @@ class ImportService
 
     /**
      * @param resource $handle
+     * @return list<string>
      */
     private function readHeader($handle): array
     {
@@ -440,9 +450,13 @@ class ImportService
         if ($header === false) {
             return [];
         }
-        return array_map('trim', $header);
+        return array_map(static fn(?string $v): string => trim((string)$v), $header);
     }
 
+    /**
+     * @param list<string> $errors
+     * @return array{success: bool, total: int, created: int, updated: int, unchanged: int, deactivated: int, skipped: int, errors: list<string>}
+     */
     private function errorResult(array $errors): array
     {
         return ['success' => false, 'total' => 0, 'created' => 0, 'updated' => 0, 'unchanged' => 0, 'deactivated' => 0, 'skipped' => 0, 'errors' => $errors];

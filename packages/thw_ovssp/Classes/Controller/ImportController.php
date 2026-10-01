@@ -8,6 +8,7 @@ use Init\Thw\Ovssp\Service\ImportService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
+use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
@@ -28,7 +29,8 @@ class ImportController
 
     public function uploadAction(ServerRequestInterface $request): ResponseInterface
     {
-        $body = $request->getParsedBody() ?? [];
+        /** @var array<string, mixed> $body */
+        $body = (array)($request->getParsedBody() ?? []);
         $type = (string)($body['type'] ?? '');
         $realm = strtoupper((string)($body['realm'] ?? ''));
         $pid = (int)($body['pid'] ?? 0);
@@ -63,6 +65,7 @@ class ImportController
         }
 
         $tempFile = GeneralUtility::tempnam('ovssp_import_', '.csv');
+        /** @var \Psr\Http\Message\UploadedFileInterface $uploadedFile */
         $uploadedFile->moveTo($tempFile);
 
         try {
@@ -93,7 +96,7 @@ class ImportController
         $totalCount = (int)$qb
             ->count('*')
             ->from($tableName)
-            ->where($qb->expr()->eq('deleted', 0))
+            ->where($qb->expr()->eq('deleted', $qb->createNamedParameter(0, Connection::PARAM_INT)))
             ->executeQuery()
             ->fetchOne();
 
@@ -102,7 +105,7 @@ class ImportController
         $orgunits = $qb
             ->select('*')
             ->from($tableName)
-            ->where($qb->expr()->eq('deleted', 0))
+            ->where($qb->expr()->eq('deleted', $qb->createNamedParameter(0, Connection::PARAM_INT)))
             ->orderBy('name', 'ASC')
             ->setFirstResult($offset)
             ->setMaxResults($perPage)
@@ -131,7 +134,7 @@ class ImportController
         $totalCount = (int)$qb
             ->count('*')
             ->from($tableName)
-            ->where($qb->expr()->eq('deleted', 0))
+            ->where($qb->expr()->eq('deleted', $qb->createNamedParameter(0, Connection::PARAM_INT)))
             ->executeQuery()
             ->fetchOne();
 
@@ -140,7 +143,7 @@ class ImportController
         $directories = $qb
             ->select('*')
             ->from($tableName)
-            ->where($qb->expr()->eq('deleted', 0))
+            ->where($qb->expr()->eq('deleted', $qb->createNamedParameter(0, Connection::PARAM_INT)))
             ->addOrderBy('sort_key', 'ASC')
             ->addOrderBy('name', 'ASC')
             ->setFirstResult($offset)
@@ -170,8 +173,8 @@ class ImportController
             ->count('*')
             ->from('fe_users')
             ->where(
-                $qb->expr()->eq('deleted', 0),
-                $qb->expr()->gt('thw_uid', 0)
+                $qb->expr()->eq('deleted', $qb->createNamedParameter(0, Connection::PARAM_INT)),
+                $qb->expr()->gt('thw_uid', $qb->createNamedParameter(0, Connection::PARAM_INT))
             )
             ->executeQuery()
             ->fetchOne();
@@ -183,8 +186,8 @@ class ImportController
             ->from('fe_users', 'u')
             ->leftJoin('u', 'tx_thwovssp_domain_model_orgunit', 'o', $qb->expr()->eq('u.thw_orgunit', 'o.uid'))
             ->where(
-                $qb->expr()->eq('u.deleted', 0),
-                $qb->expr()->gt('u.thw_uid', 0)
+                $qb->expr()->eq('u.deleted', $qb->createNamedParameter(0, Connection::PARAM_INT)),
+                $qb->expr()->gt('u.thw_uid', $qb->createNamedParameter(0, Connection::PARAM_INT))
             )
             ->addOrderBy('u.last_name', 'ASC')
             ->addOrderBy('u.first_name', 'ASC')
@@ -204,7 +207,7 @@ class ImportController
     }
 
     /**
-     * @return array{currentPage: int, totalPages: int, perPage: int, route: string, pages: array}
+     * @return array{currentPage: int, totalPages: int, perPage: int, route: string, pages: list<array{number: int, isCurrent: bool}>, hasPrev: bool, hasNext: bool, prevPage: int, nextPage: int}
      */
     private function buildPagination(int $currentPage, int $perPage, int $totalCount, string $route): array
     {
