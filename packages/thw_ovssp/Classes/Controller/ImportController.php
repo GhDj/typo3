@@ -86,16 +86,28 @@ class ImportController
         $page = max(1, (int)($request->getQueryParams()['page'] ?? 1));
         $perPage = 50;
         $offset = ($page - 1) * $perPage;
+        $tableName = 'tx_thwovssp_domain_model_orgunit';
 
-        $connection = $this->connectionPool->getConnectionForTable('tx_thwovssp_domain_model_orgunit');
+        $qb = $this->connectionPool->getQueryBuilderForTable($tableName);
+        $qb->getRestrictions()->removeAll();
+        $totalCount = (int)$qb
+            ->count('*')
+            ->from($tableName)
+            ->where($qb->expr()->eq('deleted', 0))
+            ->executeQuery()
+            ->fetchOne();
 
-        $totalCount = (int)$connection->executeQuery(
-            'SELECT COUNT(*) FROM tx_thwovssp_domain_model_orgunit WHERE deleted = 0'
-        )->fetchOne();
-
-        $orgunits = $connection->executeQuery(
-            'SELECT * FROM tx_thwovssp_domain_model_orgunit WHERE deleted = 0 ORDER BY name ASC LIMIT ' . $perPage . ' OFFSET ' . $offset
-        )->fetchAllAssociative();
+        $qb = $this->connectionPool->getQueryBuilderForTable($tableName);
+        $qb->getRestrictions()->removeAll();
+        $orgunits = $qb
+            ->select('*')
+            ->from($tableName)
+            ->where($qb->expr()->eq('deleted', 0))
+            ->orderBy('name', 'ASC')
+            ->setFirstResult($offset)
+            ->setMaxResults($perPage)
+            ->executeQuery()
+            ->fetchAllAssociative();
 
         $moduleTemplate = $this->moduleTemplateFactory->create($request);
         $moduleTemplate->assignMultiple([
@@ -112,16 +124,29 @@ class ImportController
         $page = max(1, (int)($request->getQueryParams()['page'] ?? 1));
         $perPage = 50;
         $offset = ($page - 1) * $perPage;
+        $tableName = 'tx_thwovssp_domain_model_directory';
 
-        $connection = $this->connectionPool->getConnectionForTable('tx_thwovssp_domain_model_directory');
+        $qb = $this->connectionPool->getQueryBuilderForTable($tableName);
+        $qb->getRestrictions()->removeAll();
+        $totalCount = (int)$qb
+            ->count('*')
+            ->from($tableName)
+            ->where($qb->expr()->eq('deleted', 0))
+            ->executeQuery()
+            ->fetchOne();
 
-        $totalCount = (int)$connection->executeQuery(
-            'SELECT COUNT(*) FROM tx_thwovssp_domain_model_directory WHERE deleted = 0'
-        )->fetchOne();
-
-        $directories = $connection->executeQuery(
-            'SELECT * FROM tx_thwovssp_domain_model_directory WHERE deleted = 0 ORDER BY CASE WHEN sort_key IS NULL THEN 1 ELSE 0 END, sort_key ASC, name ASC LIMIT ' . $perPage . ' OFFSET ' . $offset
-        )->fetchAllAssociative();
+        $qb = $this->connectionPool->getQueryBuilderForTable($tableName);
+        $qb->getRestrictions()->removeAll();
+        $directories = $qb
+            ->select('*')
+            ->from($tableName)
+            ->where($qb->expr()->eq('deleted', 0))
+            ->addOrderBy('sort_key', 'ASC')
+            ->addOrderBy('name', 'ASC')
+            ->setFirstResult($offset)
+            ->setMaxResults($perPage)
+            ->executeQuery()
+            ->fetchAllAssociative();
 
         $moduleTemplate = $this->moduleTemplateFactory->create($request);
         $moduleTemplate->assignMultiple([
@@ -139,20 +164,34 @@ class ImportController
         $perPage = 50;
         $offset = ($page - 1) * $perPage;
 
-        $connection = $this->connectionPool->getConnectionForTable('fe_users');
+        $qb = $this->connectionPool->getQueryBuilderForTable('fe_users');
+        $qb->getRestrictions()->removeAll();
+        $totalCount = (int)$qb
+            ->count('*')
+            ->from('fe_users')
+            ->where(
+                $qb->expr()->eq('deleted', 0),
+                $qb->expr()->gt('thw_uid', 0)
+            )
+            ->executeQuery()
+            ->fetchOne();
 
-        $totalCount = (int)$connection->executeQuery(
-            'SELECT COUNT(*) FROM fe_users WHERE deleted = 0 AND thw_uid > 0'
-        )->fetchOne();
-
-        $users = $connection->executeQuery(
-            'SELECT u.*, o.name AS orgunit_name, o.oe_code
-             FROM fe_users u
-             LEFT JOIN tx_thwovssp_domain_model_orgunit o ON u.thw_orgunit = o.uid
-             WHERE u.deleted = 0 AND u.thw_uid > 0
-             ORDER BY u.last_name ASC, u.first_name ASC
-             LIMIT ' . $perPage . ' OFFSET ' . $offset
-        )->fetchAllAssociative();
+        $qb = $this->connectionPool->getQueryBuilderForTable('fe_users');
+        $qb->getRestrictions()->removeAll();
+        $users = $qb
+            ->select('u.*', 'o.name AS orgunit_name', 'o.oe_code')
+            ->from('fe_users', 'u')
+            ->leftJoin('u', 'tx_thwovssp_domain_model_orgunit', 'o', $qb->expr()->eq('u.thw_orgunit', 'o.uid'))
+            ->where(
+                $qb->expr()->eq('u.deleted', 0),
+                $qb->expr()->gt('u.thw_uid', 0)
+            )
+            ->addOrderBy('u.last_name', 'ASC')
+            ->addOrderBy('u.first_name', 'ASC')
+            ->setFirstResult($offset)
+            ->setMaxResults($perPage)
+            ->executeQuery()
+            ->fetchAllAssociative();
 
         $moduleTemplate = $this->moduleTemplateFactory->create($request);
         $moduleTemplate->assignMultiple([

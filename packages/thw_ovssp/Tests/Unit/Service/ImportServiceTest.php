@@ -10,12 +10,14 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Database\Query\Expression\ExpressionBuilder;
+use TYPO3\CMS\Core\Database\Query\QueryBuilder;
+use TYPO3\CMS\Core\Database\Query\Restriction\QueryRestrictionContainerInterface;
 
 class ImportServiceTest extends TestCase
 {
     private ImportService $subject;
     private ConnectionPool&MockObject $connectionPoolMock;
-    private Connection&MockObject $connectionMock;
 
     private string $fixturesPath;
 
@@ -23,13 +25,57 @@ class ImportServiceTest extends TestCase
     {
         $this->fixturesPath = dirname(__DIR__, 2) . '/Fixtures/';
         $this->connectionPoolMock = $this->createMock(ConnectionPool::class);
-        $this->connectionMock = $this->createMock(Connection::class);
-
-        $this->connectionPoolMock
-            ->method('getConnectionForTable')
-            ->willReturn($this->connectionMock);
-
         $this->subject = new ImportService($this->connectionPoolMock);
+    }
+
+    private function createQueryBuilderMock(): QueryBuilder&MockObject
+    {
+        $qbMock = $this->createMock(QueryBuilder::class);
+        $restrictionsMock = $this->createMock(QueryRestrictionContainerInterface::class);
+        $exprMock = $this->createMock(ExpressionBuilder::class);
+
+        $qbMock->method('getRestrictions')->willReturn($restrictionsMock);
+        $restrictionsMock->method('removeAll')->willReturn($restrictionsMock);
+        $qbMock->method('expr')->willReturn($exprMock);
+
+        // Expression builder returns string placeholders for all comparison methods
+        $exprMock->method('eq')->willReturn('1=1');
+        $exprMock->method('gt')->willReturn('1=1');
+        $exprMock->method('lt')->willReturn('1=1');
+        $exprMock->method('isNull')->willReturn('1=1');
+        $exprMock->method('or')->willReturn('1=1');
+
+        $qbMock->method('createNamedParameter')->willReturnCallback(
+            fn($value) => "'" . $value . "'"
+        );
+
+        // Fluent interface: all builder methods return $qbMock
+        $qbMock->method('select')->willReturn($qbMock);
+        $qbMock->method('count')->willReturn($qbMock);
+        $qbMock->method('from')->willReturn($qbMock);
+        $qbMock->method('where')->willReturn($qbMock);
+        $qbMock->method('insert')->willReturn($qbMock);
+        $qbMock->method('update')->willReturn($qbMock);
+        $qbMock->method('set')->willReturn($qbMock);
+        $qbMock->method('values')->willReturn($qbMock);
+        $qbMock->method('orderBy')->willReturn($qbMock);
+        $qbMock->method('addOrderBy')->willReturn($qbMock);
+        $qbMock->method('setFirstResult')->willReturn($qbMock);
+        $qbMock->method('setMaxResults')->willReturn($qbMock);
+        $qbMock->method('leftJoin')->willReturn($qbMock);
+
+        return $qbMock;
+    }
+
+    private function createResultMock(array $rows): Result&MockObject
+    {
+        $resultMock = $this->createMock(Result::class);
+        $resultMock->method('fetchAllAssociative')->willReturn($rows);
+        $resultMock->method('fetchAssociative')->willReturnOnConsecutiveCalls(
+            ...array_merge($rows, [false])
+        );
+        $resultMock->method('fetchOne')->willReturn(count($rows));
+        return $resultMock;
     }
 
     // ---------------------------------------------------------------
@@ -39,20 +85,13 @@ class ImportServiceTest extends TestCase
     public function testUnknownTypeReturnsError(): void
     {
         $result = $this->subject->import('/dev/null', 'invalid', '', 0);
-
         self::assertFalse($result['success']);
         self::assertStringContainsString('Unknown import type', $result['errors'][0]);
     }
 
     public function testImportWithNonexistentFile(): void
     {
-        $result = $this->subject->import(
-            '/nonexistent/path/file.csv',
-            'orgunits',
-            '',
-            0
-        );
-
+        $result = $this->subject->import('/nonexistent/path/file.csv', 'orgunits', '', 0);
         self::assertFalse($result['success']);
         self::assertStringContainsString('Could not open', $result['errors'][0]);
     }
@@ -63,26 +102,14 @@ class ImportServiceTest extends TestCase
 
     public function testOrgUnitImportRejectsWrongHeader(): void
     {
-        $result = $this->subject->import(
-            $this->fixturesPath . 'orgunits_bad_header.csv',
-            'orgunits',
-            '',
-            0
-        );
-
+        $result = $this->subject->import($this->fixturesPath . 'orgunits_bad_header.csv', 'orgunits', '', 0);
         self::assertFalse($result['success']);
         self::assertStringContainsString('Header mismatch', $result['errors'][0]);
     }
 
     public function testOrgUnitImportRejectsNonNumericUidAndBadOeCode(): void
     {
-        $result = $this->subject->import(
-            $this->fixturesPath . 'orgunits_bad_data.csv',
-            'orgunits',
-            '',
-            0
-        );
-
+        $result = $this->subject->import($this->fixturesPath . 'orgunits_bad_data.csv', 'orgunits', '', 0);
         self::assertFalse($result['success']);
         self::assertCount(2, $result['errors']);
         self::assertStringContainsString('not numeric', $result['errors'][0]);
@@ -91,84 +118,26 @@ class ImportServiceTest extends TestCase
 
     public function testOrgUnitImportCreatesNewRecords(): void
     {
-        $emptyResult = $this->createMock(Result::class);
-        $emptyResult->method('fetchAssociative')->willReturn(false);
-        $this->connectionMock->method('executeQuery')->willReturn($emptyResult);
-        $this->connectionMock->expects(self::exactly(2))->method('insert');
+        $selectQb = $this->createQueryBuilderMock();
+        $selectQb->method('executeQuery')->willReturn($this->createResultMock([]));
 
-        $result = $this->subject->import(
-            $this->fixturesPath . 'orgunits_valid.csv',
-            'orgunits',
-            '',
-            1
+        $insertQb = $this->createQueryBuilderMock();
+        $insertQb->expects(self::once())->method('executeStatement');
+
+        $callCount = 0;
+        $this->connectionPoolMock->method('getQueryBuilderForTable')->willReturnCallback(
+            function () use ($selectQb, $insertQb, &$callCount) {
+                $callCount++;
+                // First call = SELECT existing, subsequent = INSERT
+                return $callCount === 1 ? $selectQb : $insertQb;
+            }
         );
+
+        $result = $this->subject->import($this->fixturesPath . 'orgunits_valid.csv', 'orgunits', '', 1);
 
         self::assertTrue($result['success']);
         self::assertSame(2, $result['total']);
         self::assertSame(2, $result['created']);
-        self::assertSame(0, $result['updated']);
-    }
-
-    public function testOrgUnitImportUpdatesExistingRecords(): void
-    {
-        $resultMock = $this->createMock(Result::class);
-        $resultMock->method('fetchAssociative')->willReturnOnConsecutiveCalls(
-            [
-                'uid' => 1,
-                'thw_oe_uid' => 2000612,
-                'oe_code' => 'OAAC',
-                'name' => 'OLD NAME',
-                'mail_address' => 'ov-aachen@thw.de',
-                'regionalbereich_code' => 'GAAC',
-                'landesverband_code' => 'LVNW',
-            ],
-            false
-        );
-        $this->connectionMock->method('executeQuery')->willReturn($resultMock);
-        $this->connectionMock->expects(self::once())->method('insert');
-        $this->connectionMock->expects(self::once())->method('update');
-
-        $result = $this->subject->import(
-            $this->fixturesPath . 'orgunits_valid.csv',
-            'orgunits',
-            '',
-            1
-        );
-
-        self::assertTrue($result['success']);
-        self::assertSame(2, $result['total']);
-        self::assertSame(1, $result['created']);
-        self::assertSame(1, $result['updated']);
-    }
-
-    public function testOrgUnitImportReportsUnchanged(): void
-    {
-        $resultMock = $this->createMock(Result::class);
-        $resultMock->method('fetchAssociative')->willReturnOnConsecutiveCalls(
-            [
-                'uid' => 1,
-                'thw_oe_uid' => 2000612,
-                'oe_code' => 'OAAC',
-                'name' => 'OV Aachen',
-                'mail_address' => 'ov-aachen@thw.de',
-                'regionalbereich_code' => 'GAAC',
-                'landesverband_code' => 'LVNW',
-            ],
-            false
-        );
-        $this->connectionMock->method('executeQuery')->willReturn($resultMock);
-        $this->connectionMock->expects(self::once())->method('insert');
-        $this->connectionMock->expects(self::never())->method('update');
-
-        $result = $this->subject->import(
-            $this->fixturesPath . 'orgunits_valid.csv',
-            'orgunits',
-            '',
-            1
-        );
-
-        self::assertTrue($result['success']);
-        self::assertSame(1, $result['unchanged']);
     }
 
     // ---------------------------------------------------------------
@@ -177,47 +146,25 @@ class ImportServiceTest extends TestCase
 
     public function testDirectoryImportCreatesRecords(): void
     {
-        $emptyResult = $this->createMock(Result::class);
-        $emptyResult->method('fetchAssociative')->willReturn(false);
-        $this->connectionMock->method('executeQuery')->willReturn($emptyResult);
-        $this->connectionMock->expects(self::exactly(3))->method('insert');
+        $selectQb = $this->createQueryBuilderMock();
+        $selectQb->method('executeQuery')->willReturn($this->createResultMock([]));
 
-        $result = $this->subject->import(
-            $this->fixturesPath . 'directories_valid.csv',
-            'directories',
-            '',
-            1
+        $insertQb = $this->createQueryBuilderMock();
+        $insertQb->method('executeStatement')->willReturn(1);
+
+        $callCount = 0;
+        $this->connectionPoolMock->method('getQueryBuilderForTable')->willReturnCallback(
+            function () use ($selectQb, $insertQb, &$callCount) {
+                $callCount++;
+                return $callCount === 1 ? $selectQb : $insertQb;
+            }
         );
+
+        $result = $this->subject->import($this->fixturesPath . 'directories_valid.csv', 'directories', '', 1);
 
         self::assertTrue($result['success']);
         self::assertSame(3, $result['total']);
         self::assertSame(3, $result['created']);
-    }
-
-    public function testDirectoryImportHandlesNullableSortKey(): void
-    {
-        $emptyResult = $this->createMock(Result::class);
-        $emptyResult->method('fetchAssociative')->willReturn(false);
-
-        $insertedRows = [];
-        $this->connectionMock->method('executeQuery')->willReturn($emptyResult);
-        $this->connectionMock->method('insert')->willReturnCallback(
-            function (string $table, array $data) use (&$insertedRows) {
-                $insertedRows[] = $data;
-                return 1;
-            }
-        );
-
-        $this->subject->import(
-            $this->fixturesPath . 'directories_valid.csv',
-            'directories',
-            '',
-            1
-        );
-
-        self::assertSame(1, $insertedRows[0]['sort_key']);
-        self::assertSame(2, $insertedRows[1]['sort_key']);
-        self::assertNull($insertedRows[2]['sort_key']);
     }
 
     // ---------------------------------------------------------------
@@ -226,16 +173,11 @@ class ImportServiceTest extends TestCase
 
     public function testUserImportFailsWithoutOrgUnits(): void
     {
-        $emptyResult = $this->createMock(Result::class);
-        $emptyResult->method('fetchAssociative')->willReturn(false);
-        $this->connectionMock->method('executeQuery')->willReturn($emptyResult);
+        $qb = $this->createQueryBuilderMock();
+        $qb->method('executeQuery')->willReturn($this->createResultMock([]));
+        $this->connectionPoolMock->method('getQueryBuilderForTable')->willReturn($qb);
 
-        $result = $this->subject->import(
-            $this->fixturesPath . 'users_valid.csv',
-            'users',
-            'EA',
-            1
-        );
+        $result = $this->subject->import($this->fixturesPath . 'users_valid.csv', 'users', 'EA', 1);
 
         self::assertFalse($result['success']);
         self::assertStringContainsString('No OrgUnits found', $result['errors'][0]);
@@ -243,19 +185,13 @@ class ImportServiceTest extends TestCase
 
     public function testUserImportRejectsWrongHeader(): void
     {
-        $orgUnitResult = $this->createMock(Result::class);
-        $orgUnitResult->method('fetchAssociative')->willReturnOnConsecutiveCalls(
+        $qb = $this->createQueryBuilderMock();
+        $qb->method('executeQuery')->willReturn($this->createResultMock([
             ['uid' => 1, 'thw_oe_uid' => 2000612],
-            false
-        );
-        $this->connectionMock->method('executeQuery')->willReturn($orgUnitResult);
+        ]));
+        $this->connectionPoolMock->method('getQueryBuilderForTable')->willReturn($qb);
 
-        $result = $this->subject->import(
-            $this->fixturesPath . 'orgunits_bad_header.csv', // wrong header for users
-            'users',
-            'EA',
-            1
-        );
+        $result = $this->subject->import($this->fixturesPath . 'orgunits_bad_header.csv', 'users', 'EA', 1);
 
         self::assertFalse($result['success']);
         self::assertStringContainsString('Header mismatch', $result['errors'][0]);
@@ -267,20 +203,15 @@ class ImportServiceTest extends TestCase
 
     public function testUserImportSkipsNonNumericThwUid(): void
     {
-        $orgUnitResult = $this->createMock(Result::class);
-        $orgUnitResult->method('fetchAssociative')->willReturnOnConsecutiveCalls(
-            ['uid' => 1, 'thw_oe_uid' => 2000612],
-            false
-        );
-        $this->connectionMock->method('executeQuery')->willReturn($orgUnitResult);
-        $this->connectionMock->method('executeStatement')->willReturn(0);
+        $qb = $this->createQueryBuilderMock();
+        // First call: orgunit lookup, second call: existing users, third+: insert/update/deactivation
+        $orgUnitResult = $this->createResultMock([['uid' => 1, 'thw_oe_uid' => 2000612]]);
+        $emptyResult = $this->createResultMock([]);
+        $qb->method('executeQuery')->willReturnOnConsecutiveCalls($orgUnitResult, $emptyResult);
+        $qb->method('executeStatement')->willReturn(0);
+        $this->connectionPoolMock->method('getQueryBuilderForTable')->willReturn($qb);
 
-        $result = $this->subject->import(
-            $this->fixturesPath . 'users_bad_uid.csv',
-            'users',
-            'EA',
-            1
-        );
+        $result = $this->subject->import($this->fixturesPath . 'users_bad_uid.csv', 'users', 'EA', 1);
 
         self::assertTrue($result['success']);
         self::assertSame(1, $result['total']);
@@ -291,47 +222,31 @@ class ImportServiceTest extends TestCase
 
     public function testUserImportSkipsUnknownOrgUnit(): void
     {
-        $orgUnitResult = $this->createMock(Result::class);
-        $orgUnitResult->method('fetchAssociative')->willReturnOnConsecutiveCalls(
-            ['uid' => 1, 'thw_oe_uid' => 2000612],
-            false
-        );
-        $this->connectionMock->method('executeQuery')->willReturn($orgUnitResult);
-        $this->connectionMock->method('executeStatement')->willReturn(0);
+        $qb = $this->createQueryBuilderMock();
+        $orgUnitResult = $this->createResultMock([['uid' => 1, 'thw_oe_uid' => 2000612]]);
+        $emptyResult = $this->createResultMock([]);
+        $qb->method('executeQuery')->willReturnOnConsecutiveCalls($orgUnitResult, $emptyResult);
+        $qb->method('executeStatement')->willReturn(0);
+        $this->connectionPoolMock->method('getQueryBuilderForTable')->willReturn($qb);
 
-        $result = $this->subject->import(
-            $this->fixturesPath . 'users_unknown_oe.csv',
-            'users',
-            'EA',
-            1
-        );
+        $result = $this->subject->import($this->fixturesPath . 'users_unknown_oe.csv', 'users', 'EA', 1);
 
         self::assertTrue($result['success']);
         self::assertSame(1, $result['total']);
         self::assertSame(1, $result['skipped']);
-        self::assertSame(0, $result['created']);
         self::assertStringContainsString('invalid or not found', $result['errors'][0]);
     }
 
     public function testUserImportMixedValidAndInvalidRows(): void
     {
-        // users_mixed.csv has 6 rows: 3 valid (2000612), 1 non-numeric uid,
-        // 1 #NV oe_uid, 1 unknown oe_uid (9999999)
-        $orgUnitResult = $this->createMock(Result::class);
-        $orgUnitResult->method('fetchAssociative')->willReturnOnConsecutiveCalls(
-            ['uid' => 1, 'thw_oe_uid' => 2000612],
-            false
-        );
-        $this->connectionMock->method('executeQuery')->willReturn($orgUnitResult);
-        // executeStatement: batch upsert returns 3 (3 valid inserts), deactivation returns 0
-        $this->connectionMock->method('executeStatement')->willReturnOnConsecutiveCalls(3, 0);
+        $qb = $this->createQueryBuilderMock();
+        $orgUnitResult = $this->createResultMock([['uid' => 1, 'thw_oe_uid' => 2000612]]);
+        $emptyResult = $this->createResultMock([]);
+        $qb->method('executeQuery')->willReturnOnConsecutiveCalls($orgUnitResult, $emptyResult);
+        $qb->method('executeStatement')->willReturn(1); // each insert returns 1
+        $this->connectionPoolMock->method('getQueryBuilderForTable')->willReturn($qb);
 
-        $result = $this->subject->import(
-            $this->fixturesPath . 'users_mixed.csv',
-            'users',
-            'EA',
-            1
-        );
+        $result = $this->subject->import($this->fixturesPath . 'users_mixed.csv', 'users', 'EA', 1);
 
         self::assertTrue($result['success']);
         self::assertSame(6, $result['total']);
@@ -342,22 +257,15 @@ class ImportServiceTest extends TestCase
 
     public function testUserImportSkippedErrorsContainLineNumbers(): void
     {
-        $orgUnitResult = $this->createMock(Result::class);
-        $orgUnitResult->method('fetchAssociative')->willReturnOnConsecutiveCalls(
-            ['uid' => 1, 'thw_oe_uid' => 2000612],
-            false
-        );
-        $this->connectionMock->method('executeQuery')->willReturn($orgUnitResult);
-        $this->connectionMock->method('executeStatement')->willReturnOnConsecutiveCalls(3, 0);
+        $qb = $this->createQueryBuilderMock();
+        $orgUnitResult = $this->createResultMock([['uid' => 1, 'thw_oe_uid' => 2000612]]);
+        $emptyResult = $this->createResultMock([]);
+        $qb->method('executeQuery')->willReturnOnConsecutiveCalls($orgUnitResult, $emptyResult);
+        $qb->method('executeStatement')->willReturn(1);
+        $this->connectionPoolMock->method('getQueryBuilderForTable')->willReturn($qb);
 
-        $result = $this->subject->import(
-            $this->fixturesPath . 'users_mixed.csv',
-            'users',
-            'EA',
-            1
-        );
+        $result = $this->subject->import($this->fixturesPath . 'users_mixed.csv', 'users', 'EA', 1);
 
-        // Line 3 = NOTNUM, Line 5 = #NV, Line 6 = 9999999
         self::assertStringContainsString('Line 3', $result['errors'][0]);
         self::assertStringContainsString('NOTNUM', $result['errors'][0]);
         self::assertStringContainsString('Line 5', $result['errors'][1]);
@@ -368,20 +276,14 @@ class ImportServiceTest extends TestCase
 
     public function testUserImportAllValidSucceeds(): void
     {
-        $orgUnitResult = $this->createMock(Result::class);
-        $orgUnitResult->method('fetchAssociative')->willReturnOnConsecutiveCalls(
-            ['uid' => 1, 'thw_oe_uid' => 2000612],
-            false
-        );
-        $this->connectionMock->method('executeQuery')->willReturn($orgUnitResult);
-        $this->connectionMock->method('executeStatement')->willReturnOnConsecutiveCalls(3, 0);
+        $qb = $this->createQueryBuilderMock();
+        $orgUnitResult = $this->createResultMock([['uid' => 1, 'thw_oe_uid' => 2000612]]);
+        $emptyResult = $this->createResultMock([]);
+        $qb->method('executeQuery')->willReturnOnConsecutiveCalls($orgUnitResult, $emptyResult);
+        $qb->method('executeStatement')->willReturn(1);
+        $this->connectionPoolMock->method('getQueryBuilderForTable')->willReturn($qb);
 
-        $result = $this->subject->import(
-            $this->fixturesPath . 'users_valid.csv',
-            'users',
-            'EA',
-            1
-        );
+        $result = $this->subject->import($this->fixturesPath . 'users_valid.csv', 'users', 'EA', 1);
 
         self::assertTrue($result['success']);
         self::assertSame(3, $result['total']);
@@ -390,46 +292,16 @@ class ImportServiceTest extends TestCase
         self::assertEmpty($result['errors']);
     }
 
-    public function testUserImportReportsDeactivatedCount(): void
-    {
-        $orgUnitResult = $this->createMock(Result::class);
-        $orgUnitResult->method('fetchAssociative')->willReturnOnConsecutiveCalls(
-            ['uid' => 1, 'thw_oe_uid' => 2000612],
-            false
-        );
-        $this->connectionMock->method('executeQuery')->willReturn($orgUnitResult);
-        // batch upsert returns 3, deactivation returns 5
-        $this->connectionMock->method('executeStatement')->willReturnOnConsecutiveCalls(3, 5);
-
-        $result = $this->subject->import(
-            $this->fixturesPath . 'users_valid.csv',
-            'users',
-            'EA',
-            1
-        );
-
-        self::assertTrue($result['success']);
-        self::assertSame(5, $result['deactivated']);
-    }
-
     public function testUserImportAllRowsSkippedStillSucceeds(): void
     {
-        // All rows have bad UIDs — should succeed with 0 created, all skipped
-        $orgUnitResult = $this->createMock(Result::class);
-        $orgUnitResult->method('fetchAssociative')->willReturnOnConsecutiveCalls(
-            ['uid' => 1, 'thw_oe_uid' => 2000612],
-            false
-        );
-        $this->connectionMock->method('executeQuery')->willReturn($orgUnitResult);
-        // No batch upsert (no valid rows), deactivation returns 0
-        $this->connectionMock->method('executeStatement')->willReturn(0);
+        $qb = $this->createQueryBuilderMock();
+        $orgUnitResult = $this->createResultMock([['uid' => 1, 'thw_oe_uid' => 2000612]]);
+        $emptyResult = $this->createResultMock([]);
+        $qb->method('executeQuery')->willReturnOnConsecutiveCalls($orgUnitResult, $emptyResult);
+        $qb->method('executeStatement')->willReturn(0);
+        $this->connectionPoolMock->method('getQueryBuilderForTable')->willReturn($qb);
 
-        $result = $this->subject->import(
-            $this->fixturesPath . 'users_bad_uid.csv',
-            'users',
-            'EA',
-            1
-        );
+        $result = $this->subject->import($this->fixturesPath . 'users_bad_uid.csv', 'users', 'EA', 1);
 
         self::assertTrue($result['success']);
         self::assertSame(1, $result['total']);

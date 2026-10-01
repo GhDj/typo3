@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Init\Thw\Ovssp\Service;
 
+use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 
 class ImportService
 {
-    private const BATCH_SIZE = 500;
-
     private const USER_HEADERS = ['thw_uid', 'username', 'first_name', 'last_name', 'thw_oe_uid'];
     private const ORGUNIT_HEADERS = ['thw_oe_uid', 'oe_code', 'name', 'mail_address', 'Regionalbereich', 'Landesverband'];
     private const DIRECTORY_HEADERS = ['Verzeichnis', 'lesen', 'schreiben', 'SortKey', 'Beschreibung'];
@@ -19,7 +19,7 @@ class ImportService
     ) {}
 
     /**
-     * @return array{success: bool, total: int, created: int, updated: int, unchanged: int, deactivated: int, errors: string[]}
+     * @return array{success: bool, total: int, created: int, updated: int, unchanged: int, deactivated: int, skipped: int, errors: string[]}
      */
     public function import(string $filePath, string $type, string $realm, int $pid): array
     {
@@ -27,7 +27,7 @@ class ImportService
             'users' => $this->importUsers($filePath, $realm, $pid),
             'orgunits' => $this->importOrgUnits($filePath, $pid),
             'directories' => $this->importDirectories($filePath, $pid),
-            default => ['success' => false, 'total' => 0, 'created' => 0, 'updated' => 0, 'unchanged' => 0, 'deactivated' => 0, 'errors' => ['Unknown import type: ' . $type]],
+            default => $this->errorResult(['Unknown import type: ' . $type]),
         };
     }
 
@@ -82,29 +82,39 @@ class ImportService
             return $this->errorResult($errors);
         }
 
-        $connection = $this->connectionPool->getConnectionForTable('tx_thwovssp_domain_model_orgunit');
+        $tableName = 'tx_thwovssp_domain_model_orgunit';
         $now = time();
         $created = 0;
         $updated = 0;
         $unchanged = 0;
 
+        // Load existing records via QueryBuilder
+        $qb = $this->connectionPool->getQueryBuilderForTable($tableName);
+        $qb->getRestrictions()->removeAll();
+        $existingRows = $qb
+            ->select('uid', 'thw_oe_uid', 'oe_code', 'name', 'mail_address', 'regionalbereich_code', 'landesverband_code')
+            ->from($tableName)
+            ->where($qb->expr()->eq('deleted', 0))
+            ->executeQuery()
+            ->fetchAllAssociative();
+
         $existing = [];
-        $result = $connection->executeQuery(
-            'SELECT uid, thw_oe_uid, oe_code, name, mail_address, regionalbereich_code, landesverband_code FROM tx_thwovssp_domain_model_orgunit WHERE deleted = 0'
-        );
-        while ($row = $result->fetchAssociative()) {
+        foreach ($existingRows as $row) {
             $existing[(int)$row['thw_oe_uid']] = $row;
         }
 
         foreach ($rows as $row) {
             $ex = $existing[$row['thw_oe_uid']] ?? null;
             if ($ex === null) {
-                $connection->insert('tx_thwovssp_domain_model_orgunit', array_merge($row, [
-                    'pid' => $pid,
-                    'tstamp' => $now,
-                    'crdate' => $now,
-                    'active' => 1,
-                ]));
+                $qb = $this->connectionPool->getQueryBuilderForTable($tableName);
+                $qb->insert($tableName)
+                    ->values(array_merge($row, [
+                        'pid' => $pid,
+                        'tstamp' => $now,
+                        'crdate' => $now,
+                        'active' => 1,
+                    ]))
+                    ->executeStatement();
                 $created++;
             } else {
                 $changes = [];
@@ -114,8 +124,14 @@ class ImportService
                     }
                 }
                 if (!empty($changes)) {
-                    $changes['tstamp'] = $now;
-                    $connection->update('tx_thwovssp_domain_model_orgunit', $changes, ['uid' => (int)$ex['uid']]);
+                    $qb = $this->connectionPool->getQueryBuilderForTable($tableName);
+                    $qb->update($tableName)
+                        ->where($qb->expr()->eq('uid', $qb->createNamedParameter((int)$ex['uid'], Connection::PARAM_INT)));
+                    foreach ($changes as $col => $val) {
+                        $qb->set($col, $val);
+                    }
+                    $qb->set('tstamp', $now);
+                    $qb->executeStatement();
                     $updated++;
                 } else {
                     $unchanged++;
@@ -125,7 +141,7 @@ class ImportService
 
         // TODO Phase 2: write audit/history entry for this import run
 
-        return ['success' => true, 'total' => count($rows), 'created' => $created, 'updated' => $updated, 'unchanged' => $unchanged, 'deactivated' => 0, 'errors' => []];
+        return ['success' => true, 'total' => count($rows), 'created' => $created, 'updated' => $updated, 'unchanged' => $unchanged, 'deactivated' => 0, 'skipped' => 0, 'errors' => []];
     }
 
     private function importDirectories(string $filePath, int $pid): array
@@ -174,28 +190,35 @@ class ImportService
             return $this->errorResult($errors);
         }
 
-        $connection = $this->connectionPool->getConnectionForTable('tx_thwovssp_domain_model_directory');
+        $tableName = 'tx_thwovssp_domain_model_directory';
         $now = time();
         $created = 0;
         $updated = 0;
         $unchanged = 0;
 
+        $qb = $this->connectionPool->getQueryBuilderForTable($tableName);
+        $qb->getRestrictions()->removeAll();
+        $existingRows = $qb
+            ->select('uid', 'name', 'allows_read', 'allows_write', 'sort_key', 'description')
+            ->from($tableName)
+            ->where($qb->expr()->eq('deleted', 0))
+            ->executeQuery()
+            ->fetchAllAssociative();
+
         $existing = [];
-        $result = $connection->executeQuery(
-            'SELECT uid, name, allows_read, allows_write, sort_key, description FROM tx_thwovssp_domain_model_directory WHERE deleted = 0'
-        );
-        while ($row = $result->fetchAssociative()) {
+        foreach ($existingRows as $row) {
             $existing[$row['name']] = $row;
         }
 
         foreach ($rows as $row) {
             $ex = $existing[$row['name']] ?? null;
             if ($ex === null) {
+                $qb = $this->connectionPool->getQueryBuilderForTable($tableName);
                 $insertData = $row;
                 $insertData['pid'] = $pid;
                 $insertData['tstamp'] = $now;
                 $insertData['crdate'] = $now;
-                $connection->insert('tx_thwovssp_domain_model_directory', $insertData);
+                $qb->insert($tableName)->values($insertData)->executeStatement();
                 $created++;
             } else {
                 $changes = [];
@@ -205,8 +228,14 @@ class ImportService
                     }
                 }
                 if (!empty($changes)) {
-                    $changes['tstamp'] = $now;
-                    $connection->update('tx_thwovssp_domain_model_directory', $changes, ['uid' => (int)$ex['uid']]);
+                    $qb = $this->connectionPool->getQueryBuilderForTable($tableName);
+                    $qb->update($tableName)
+                        ->where($qb->expr()->eq('uid', $qb->createNamedParameter((int)$ex['uid'], Connection::PARAM_INT)));
+                    foreach ($changes as $col => $val) {
+                        $qb->set($col, (string)($val ?? ''));
+                    }
+                    $qb->set('tstamp', (string)$now);
+                    $qb->executeStatement();
                     $updated++;
                 } else {
                     $unchanged++;
@@ -216,20 +245,23 @@ class ImportService
 
         // TODO Phase 2: write audit/history entry for this import run
 
-        return ['success' => true, 'total' => count($rows), 'created' => $created, 'updated' => $updated, 'unchanged' => $unchanged, 'deactivated' => 0, 'errors' => []];
+        return ['success' => true, 'total' => count($rows), 'created' => $created, 'updated' => $updated, 'unchanged' => $unchanged, 'deactivated' => 0, 'skipped' => 0, 'errors' => []];
     }
 
     private function importUsers(string $filePath, string $realm, int $pid): array
     {
-        $connection = $this->connectionPool->getConnectionForTable('fe_users');
-
         // Pre-load OrgUnit map: thw_oe_uid -> TYPO3 uid
         $orgUnitMap = [];
-        $ouConn = $this->connectionPool->getConnectionForTable('tx_thwovssp_domain_model_orgunit');
-        $result = $ouConn->executeQuery(
-            'SELECT uid, thw_oe_uid FROM tx_thwovssp_domain_model_orgunit WHERE deleted = 0'
-        );
-        while ($row = $result->fetchAssociative()) {
+        $qb = $this->connectionPool->getQueryBuilderForTable('tx_thwovssp_domain_model_orgunit');
+        $qb->getRestrictions()->removeAll();
+        $ouRows = $qb
+            ->select('uid', 'thw_oe_uid')
+            ->from('tx_thwovssp_domain_model_orgunit')
+            ->where($qb->expr()->eq('deleted', 0))
+            ->executeQuery()
+            ->fetchAllAssociative();
+
+        foreach ($ouRows as $row) {
             $orgUnitMap[(int)$row['thw_oe_uid']] = (int)$row['uid'];
         }
 
@@ -252,7 +284,25 @@ class ImportService
             )]);
         }
 
-        // Single pass: validate each row, skip invalid, upsert valid rows in batches
+        // Pre-load existing users for this realm: thw_uid -> uid
+        $existingUsers = [];
+        $qb = $this->connectionPool->getQueryBuilderForTable('fe_users');
+        $qb->getRestrictions()->removeAll();
+        $existingRows = $qb
+            ->select('uid', 'thw_uid')
+            ->from('fe_users')
+            ->where(
+                $qb->expr()->eq('deleted', 0),
+                $qb->expr()->eq('thw_realm', $qb->createNamedParameter($realm)),
+                $qb->expr()->gt('thw_uid', 0)
+            )
+            ->executeQuery()
+            ->fetchAllAssociative();
+
+        foreach ($existingRows as $row) {
+            $existingUsers[(int)$row['thw_uid']] = (int)$row['uid'];
+        }
+
         $now = time();
         $nowDatetime = date('Y-m-d H:i:s');
         $created = 0;
@@ -260,14 +310,12 @@ class ImportService
         $skipped = 0;
         $totalRows = 0;
         $skippedErrors = [];
-        $batch = [];
         $lineNum = 1;
 
         while (($fields = fgetcsv($handle, 0, ';', '"', '')) !== false) {
             $lineNum++;
             $totalRows++;
 
-            // Validate row
             if (count($fields) < 5) {
                 $skipped++;
                 if (count($skippedErrors) < 50) {
@@ -295,38 +343,68 @@ class ImportService
                 continue;
             }
 
-            $batch[] = [
-                $pid, $now, $now, (int)$thwUid, trim($fields[1]), '!',
-                trim($fields[2]), trim($fields[3]), $orgUnitMap[(int)$thwOeUid], $realm, $nowDatetime,
-            ];
+            $thwUidInt = (int)$thwUid;
+            $username = trim($fields[1]);
+            $firstName = trim($fields[2]);
+            $lastName = trim($fields[3]);
+            $orgUnitUid = $orgUnitMap[(int)$thwOeUid];
 
-            if (count($batch) >= self::BATCH_SIZE) {
-                [$batchCreated, $batchUpdated] = $this->upsertUserBatch($connection, $batch);
-                $created += $batchCreated;
-                $updated += $batchUpdated;
-                $batch = [];
+            if (isset($existingUsers[$thwUidInt])) {
+                // Update existing user
+                $qb = $this->connectionPool->getQueryBuilderForTable('fe_users');
+                $qb->update('fe_users')
+                    ->where($qb->expr()->eq('uid', $qb->createNamedParameter($existingUsers[$thwUidInt], Connection::PARAM_INT)))
+                    ->set('username', $username)
+                    ->set('first_name', $firstName)
+                    ->set('last_name', $lastName)
+                    ->set('thw_orgunit', (string)$orgUnitUid)
+                    ->set('thw_last_import', $nowDatetime)
+                    ->set('thw_import_missing_since', '', true, Connection::PARAM_NULL)
+                    ->set('disable', '0')
+                    ->set('tstamp', (string)$now)
+                    ->executeStatement();
+                $updated++;
+            } else {
+                // Insert new user
+                $qb = $this->connectionPool->getQueryBuilderForTable('fe_users');
+                $qb->insert('fe_users')
+                    ->values([
+                        'pid' => $pid,
+                        'tstamp' => $now,
+                        'crdate' => $now,
+                        'thw_uid' => $thwUidInt,
+                        'username' => $username,
+                        'password' => '!',
+                        'first_name' => $firstName,
+                        'last_name' => $lastName,
+                        'thw_orgunit' => $orgUnitUid,
+                        'thw_realm' => $realm,
+                        'thw_last_import' => $nowDatetime,
+                        'disable' => 0,
+                    ])
+                    ->executeStatement();
+                $existingUsers[$thwUidInt] = 0; // mark as known for duplicate rows in same file
+                $created++;
             }
         }
         fclose($handle);
 
-        if (!empty($batch)) {
-            [$batchCreated, $batchUpdated] = $this->upsertUserBatch($connection, $batch);
-            $created += $batchCreated;
-            $updated += $batchUpdated;
-        }
-
-        // Deactivation
-        $deactivated = $connection->executeStatement(
-            'UPDATE fe_users
-             SET disable = 1,
-                 thw_import_missing_since = COALESCE(thw_import_missing_since, ?),
-                 tstamp = ?
-             WHERE thw_realm = ?
-               AND (thw_last_import IS NULL OR thw_last_import < ?)
-               AND deleted = 0
-               AND thw_uid > 0',
-            [$nowDatetime, $now, $realm, $nowDatetime]
-        );
+        // Deactivation: users in this realm not touched by this import
+        $qb = $this->connectionPool->getQueryBuilderForTable('fe_users');
+        $deactivated = $qb->update('fe_users')
+            ->set('disable', '1')
+            ->set('thw_import_missing_since', $nowDatetime)
+            ->set('tstamp', (string)$now)
+            ->where(
+                $qb->expr()->eq('thw_realm', $qb->createNamedParameter($realm)),
+                $qb->expr()->or(
+                    $qb->expr()->isNull('thw_last_import'),
+                    $qb->expr()->lt('thw_last_import', $qb->createNamedParameter($nowDatetime))
+                ),
+                $qb->expr()->eq('deleted', 0),
+                $qb->expr()->gt('thw_uid', 0)
+            )
+            ->executeStatement();
 
         if (count($skippedErrors) < $skipped) {
             $skippedErrors[] = '... and ' . ($skipped - count($skippedErrors)) . ' more skipped rows';
@@ -335,44 +413,6 @@ class ImportService
         // TODO Phase 2: write audit/history entry for this import run
 
         return ['success' => true, 'total' => $totalRows, 'created' => $created, 'updated' => $updated, 'unchanged' => 0, 'deactivated' => $deactivated, 'skipped' => $skipped, 'errors' => $skippedErrors];
-    }
-
-    /**
-     * @return array{int, int} [created, updated]
-     */
-    private function upsertUserBatch(\TYPO3\CMS\Core\Database\Connection $connection, array $batch): array
-    {
-        $columns = 'pid, tstamp, crdate, thw_uid, username, password, first_name, last_name, thw_orgunit, thw_realm, thw_last_import';
-        $rowPlaceholder = '(' . implode(', ', array_fill(0, 11, '?')) . ')';
-        $placeholders = implode(', ', array_fill(0, count($batch), $rowPlaceholder));
-
-        $params = [];
-        foreach ($batch as $row) {
-            array_push($params, ...$row);
-        }
-
-        $sql = "INSERT INTO fe_users ($columns)
-                VALUES $placeholders
-                ON DUPLICATE KEY UPDATE
-                    tstamp = VALUES(tstamp),
-                    username = VALUES(username),
-                    first_name = VALUES(first_name),
-                    last_name = VALUES(last_name),
-                    thw_orgunit = VALUES(thw_orgunit),
-                    thw_last_import = VALUES(thw_last_import),
-                    disable = 0,
-                    thw_import_missing_since = NULL";
-
-        $affected = $connection->executeStatement($sql, $params);
-
-        $batchSize = count($batch);
-        $updates = $affected - $batchSize;
-        if ($updates < 0) {
-            $updates = 0;
-        }
-        $inserts = $batchSize - $updates;
-
-        return [$inserts, $updates];
     }
 
     /**
@@ -405,6 +445,6 @@ class ImportService
 
     private function errorResult(array $errors): array
     {
-        return ['success' => false, 'total' => 0, 'created' => 0, 'updated' => 0, 'unchanged' => 0, 'deactivated' => 0, 'errors' => $errors];
+        return ['success' => false, 'total' => 0, 'created' => 0, 'updated' => 0, 'unchanged' => 0, 'deactivated' => 0, 'skipped' => 0, 'errors' => $errors];
     }
 }
