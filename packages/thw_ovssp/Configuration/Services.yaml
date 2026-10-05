@@ -12,3 +12,9 @@ services:
 
   Init\Thw\Ovssp\Controller\PortalController:
     public: true
+
+  Init\Thw\Ovssp\Command\SetupDemoCommand:
+    tags:
+      - name: console.command
+        command: ovssp:setup-demo
+        description: 'Create demo page tree, test data, roles, and portal plugin'
