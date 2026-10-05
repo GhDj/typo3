@@ -61,7 +61,6 @@ class SetupDemoCommand extends Command
         }
 
         $this->createSiteConfiguration($rootPageUid, $baseUrl, $io);
-        $this->createTypoScriptTemplate($rootPageUid, $storagePid, $io);
         $this->createFeGroup($storagePid, $io);
         $this->createOrgUnits($storagePid, $io);
         $this->createDirectories($storagePid, $io);
@@ -173,6 +172,8 @@ class SetupDemoCommand extends Command
         $yaml = <<<YAML
 rootPageId: {$rootPageUid}
 base: '{$baseUrl}'
+dependencies:
+  - thw/thw-ovssp
 languages:
   -
     title: Deutsch
@@ -186,43 +187,7 @@ errorHandling: []
 YAML;
 
         file_put_contents($configDir . '/config.yaml', $yaml);
-        $io->writeln('  Created config/sites/ovssp/config.yaml');
-    }
-
-    private function createTypoScriptTemplate(int $rootPageUid, int $storagePid, SymfonyStyle $io): void
-    {
-        $qb = $this->connectionPool->getQueryBuilderForTable('sys_template');
-        $exists = $qb
-            ->count('uid')
-            ->from('sys_template')
-            ->where(
-                $qb->expr()->eq('pid', $qb->createNamedParameter($rootPageUid, Connection::PARAM_INT)),
-                $qb->expr()->eq('deleted', $qb->createNamedParameter(0, Connection::PARAM_INT))
-            )
-            ->executeQuery()
-            ->fetchOne();
-
-        if (is_numeric($exists) && (int) $exists > 0) {
-            $io->comment('TypoScript template already exists, skipping.');
-
-            return;
-        }
-
-        $io->section('Creating TypoScript template');
-
-        $now = time();
-        $conn = $this->connectionPool->getConnectionForTable('sys_template');
-        $conn->insert('sys_template', [
-            'pid' => $rootPageUid,
-            'title' => 'THW OV-SSP Main',
-            'root' => 1,
-            'clear' => 3,
-            'include_static_file' => 'EXT:fluid_styled_content/Configuration/TypoScript/,EXT:felogin/Configuration/TypoScript/,EXT:thw_ovssp/Configuration/TypoScript/',
-            'crdate' => $now,
-            'tstamp' => $now,
-        ]);
-
-        $io->writeln('  Created sys_template record');
+        $io->writeln('  Created config/sites/ovssp/config.yaml (with site set dependency)');
     }
 
     private function createFeGroup(int $storagePid, SymfonyStyle $io): void

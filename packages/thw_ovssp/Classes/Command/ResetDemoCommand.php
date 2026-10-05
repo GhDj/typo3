@@ -45,7 +45,6 @@ class ResetDemoCommand extends Command
         $this->deleteFeUsers($io);
         $this->deleteFeGroups($io);
         $this->deleteContentAndPages($io);
-        $this->deleteSysTemplates($io);
         $this->deleteSiteConfig($io);
 
         $io->success([
@@ -122,19 +121,6 @@ class ResetDemoCommand extends Command
         $conn->delete('pages', ['uid' => $rootUid]);
 
         $io->writeln('  Deleted ' . count($allPids) . ' pages');
-    }
-
-    private function deleteSysTemplates(SymfonyStyle $io): void
-    {
-        $qb = $this->connectionPool->getQueryBuilderForTable('sys_template');
-        $qb->getRestrictions()->removeAll();
-        $affected = $qb
-            ->delete('sys_template')
-            ->where(
-                $qb->expr()->eq('title', $qb->createNamedParameter('THW OV-SSP Main'))
-            )
-            ->executeStatement();
-        $io->writeln('  Deleted ' . $affected . ' sys_template records');
     }
 
     private function deleteSiteConfig(SymfonyStyle $io): void

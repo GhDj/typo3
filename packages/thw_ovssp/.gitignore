@@ -3,3 +3,4 @@ vendor/
 public/
 var/
 .phpstan.cache/
+.phpunit.cache/
