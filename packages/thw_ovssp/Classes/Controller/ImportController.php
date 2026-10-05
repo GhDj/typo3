@@ -34,7 +34,7 @@ class ImportController
         $body = is_array($parsedBody) ? $parsedBody : [];
         $type = isset($body['type']) && is_string($body['type']) ? $body['type'] : '';
         $realm = isset($body['realm']) && is_string($body['realm']) ? strtoupper($body['realm']) : '';
-        $pid = isset($body['pid']) ? (int)$body['pid'] : 0;
+        $pid = isset($body['pid']) && is_numeric($body['pid']) ? (int)$body['pid'] : 0;
 
         $errors = [];
 
@@ -215,7 +215,7 @@ class ImportController
     private function getPageFromRequest(ServerRequestInterface $request): int
     {
         $queryParams = $request->getQueryParams();
-        $page = isset($queryParams['page']) ? (int)$queryParams['page'] : 1;
+        $page = isset($queryParams['page']) && is_numeric($queryParams['page']) ? (int)$queryParams['page'] : 1;
         return max(1, $page);
     }
 
