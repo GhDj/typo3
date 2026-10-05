@@ -210,20 +210,6 @@ YAML;
 
         $io->section('Creating TypoScript template');
 
-        $setup = <<<TYPOSCRIPT
-page = PAGE
-page.10 = FLUIDTEMPLATE
-page.10 {
-    templateName = Default
-    templateRootPaths.10 = EXT:thw_ovssp/Resources/Private/Templates/Page/
-    variables {
-        content < styles.content.get
-    }
-}
-
-plugin.tx_felogin_login.settings.pages = {$storagePid}
-TYPOSCRIPT;
-
         $now = time();
         $conn = $this->connectionPool->getConnectionForTable('sys_template');
         $conn->insert('sys_template', [
@@ -232,44 +218,11 @@ TYPOSCRIPT;
             'root' => 1,
             'clear' => 3,
             'include_static_file' => 'EXT:fluid_styled_content/Configuration/TypoScript/,EXT:felogin/Configuration/TypoScript/,EXT:thw_ovssp/Configuration/TypoScript/',
-            'config' => '',
-            'constants' => '',
-            'setup' => $setup,
             'crdate' => $now,
             'tstamp' => $now,
         ]);
 
-        // Create minimal page template
-        $templateDir = dirname(__DIR__, 2) . '/Resources/Private/Templates/Page';
-        if (!is_dir($templateDir)) {
-            mkdir($templateDir, 0775, true);
-        }
-        $templateFile = $templateDir . '/Default.html';
-        if (!file_exists($templateFile)) {
-            file_put_contents($templateFile, <<<'HTML'
-<html xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers"
-      data-namespace-typo3-fluid="true">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <title>{data.title}</title>
-</head>
-<body>
-    <nav class="navbar navbar-dark bg-dark mb-4">
-        <div class="container">
-            <a class="navbar-brand" href="/">THW OV-SSP</a>
-        </div>
-    </nav>
-    <div class="container">
-        <f:format.raw>{content}</f:format.raw>
-    </div>
-</body>
-</html>
-HTML);
-        }
-
-        $io->writeln('  Created sys_template record + page template');
+        $io->writeln('  Created sys_template record');
     }
 
     private function createFeGroup(int $storagePid, SymfonyStyle $io): void

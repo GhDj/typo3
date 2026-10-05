@@ -1,0 +1,59 @@
+<html xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers"
+      data-namespace-typo3-fluid="true">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{data.title}</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; color: #333; }
+        .navbar { background: #003366; padding: 1rem; color: #fff; margin-bottom: 2rem; }
+        .navbar a { color: #fff; text-decoration: none; font-weight: bold; font-size: 1.2rem; }
+        .container { max-width: 1140px; margin: 0 auto; padding: 0 1rem; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
+        th, td { padding: .5rem; text-align: left; border-bottom: 1px solid #dee2e6; }
+        thead th { border-bottom: 2px solid #333; }
+        .badge { display: inline-block; padding: .25em .5em; font-size: .85em; font-weight: 600; border-radius: .25rem; color: #fff; }
+        .bg-success { background: #198754; }
+        .bg-secondary { background: #6c757d; }
+        .bg-primary { background: #0d6efd; }
+        .bg-info { background: #0dcaf0; color: #000; }
+        .bg-danger { background: #dc3545; }
+        .btn { display: inline-block; padding: .375rem .75rem; font-size: .9rem; border: 1px solid transparent; border-radius: .25rem; cursor: pointer; text-decoration: none; }
+        .btn-sm { padding: .25rem .5rem; font-size: .85rem; }
+        .btn-outline-primary { color: #0d6efd; border-color: #0d6efd; background: transparent; }
+        .btn-outline-primary:hover { background: #0d6efd; color: #fff; }
+        .btn-outline-success { color: #198754; border-color: #198754; background: transparent; }
+        .btn-outline-success:hover { background: #198754; color: #fff; }
+        .btn-outline-danger { color: #dc3545; border-color: #dc3545; background: transparent; }
+        .btn-outline-danger:hover { background: #dc3545; color: #fff; }
+        .btn-outline-secondary { color: #6c757d; border-color: #6c757d; background: transparent; }
+        .btn-primary { background: #0d6efd; color: #fff; border-color: #0d6efd; }
+        .alert { padding: 1rem; border-radius: .25rem; margin-bottom: 1rem; }
+        .alert-info { background: #cff4fc; color: #055160; }
+        .alert-danger { background: #f8d7da; color: #842029; }
+        .alert-warning { background: #fff3cd; color: #664d03; }
+        .table-secondary { opacity: 0.6; }
+        .text-muted { color: #6c757d; }
+        .list-group { list-style: none; padding: 0; margin-bottom: 1rem; }
+        .list-group-item { padding: .75rem 1rem; border: 1px solid #dee2e6; margin-top: -1px; }
+        .list-group-item-success { background: #d1e7dd; }
+        .mb-3 { margin-bottom: 1rem; }
+        .mb-4 { margin-bottom: 1.5rem; }
+        .mt-4 { margin-top: 1.5rem; }
+        .form-control, .form-select { display: block; width: 100%; max-width: 400px; padding: .375rem .75rem; font-size: 1rem; border: 1px solid #ced4da; border-radius: .25rem; margin-bottom: .5rem; }
+        .form-label { font-weight: 600; display: block; margin-bottom: .25rem; }
+        h2, h3 { margin-top: 1.5rem; margin-bottom: .75rem; }
+        small { font-weight: normal; }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <div class="container">
+            <a href="/">THW OV-SSP</a>
+        </div>
+    </div>
+    <div class="container">
+        <f:format.raw>{content}</f:format.raw>
+    </div>
+</body>
+</html>
