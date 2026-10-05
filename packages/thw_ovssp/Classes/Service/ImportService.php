@@ -293,7 +293,7 @@ class ImportService
             )]);
         }
 
-        // Pre-load existing users for this realm: thw_uid -> uid
+        // Pre-load ALL existing users by thw_uid (globally unique index)
         $existingUsers = [];
         $qb = $this->connectionPool->getQueryBuilderForTable('fe_users');
         $qb->getRestrictions()->removeAll();
@@ -301,8 +301,6 @@ class ImportService
             ->select('uid', 'thw_uid')
             ->from('fe_users')
             ->where(
-                $qb->expr()->eq('deleted', $qb->createNamedParameter(0, Connection::PARAM_INT)),
-                $qb->expr()->eq('thw_realm', $qb->createNamedParameter($realm)),
                 $qb->expr()->gt('thw_uid', $qb->createNamedParameter(0, Connection::PARAM_INT))
             )
             ->executeQuery()
