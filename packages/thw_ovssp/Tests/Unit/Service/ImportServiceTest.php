@@ -38,12 +38,13 @@ class ImportServiceTest extends TestCase
         $restrictionsMock->method('removeAll')->willReturn($restrictionsMock);
         $qbMock->method('expr')->willReturn($exprMock);
 
-        // Expression builder returns string placeholders for all comparison methods
+        // Expression builder returns string placeholders for comparison methods
         $exprMock->method('eq')->willReturn('1=1');
         $exprMock->method('gt')->willReturn('1=1');
         $exprMock->method('lt')->willReturn('1=1');
         $exprMock->method('isNull')->willReturn('1=1');
-        $exprMock->method('or')->willReturn('1=1');
+        $compositeExprMock = $this->createMock(\TYPO3\CMS\Core\Database\Query\Expression\CompositeExpression::class);
+        $exprMock->method('or')->willReturn($compositeExprMock);
 
         $qbMock->method('createNamedParameter')->willReturnCallback(
             fn($value) => "'" . $value . "'"
@@ -74,7 +75,7 @@ class ImportServiceTest extends TestCase
     {
         $resultMock = $this->createMock(Result::class);
         $resultMock->method('fetchAllAssociative')->willReturn($rows);
-        $consecutive = array_values($rows);
+        $consecutive = $rows;
         $consecutive[] = false;
         $resultMock->method('fetchAssociative')->willReturnOnConsecutiveCalls(...$consecutive);
         $resultMock->method('fetchOne')->willReturn(count($rows));
