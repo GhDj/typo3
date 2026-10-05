@@ -24,18 +24,36 @@ CREATE TABLE tx_thwovssp_domain_model_directory (
 );
 
 CREATE TABLE tx_thwovssp_domain_model_role (
+    uid int(11) unsigned NOT NULL AUTO_INCREMENT,
+    pid int(11) unsigned NOT NULL DEFAULT 0,
+    tstamp int(11) unsigned NOT NULL DEFAULT 0,
+    crdate int(11) unsigned NOT NULL DEFAULT 0,
+    deleted tinyint(1) unsigned NOT NULL DEFAULT 0,
+    hidden tinyint(1) unsigned NOT NULL DEFAULT 0,
+
     name varchar(100) NOT NULL DEFAULT '',
     role_group varchar(50) NOT NULL DEFAULT '',
     description text,
 
+    PRIMARY KEY (uid),
+    KEY parent (pid),
     UNIQUE INDEX idx_name (name)
 );
 
 CREATE TABLE tx_thwovssp_domain_model_directoryright (
+    uid int(11) unsigned NOT NULL AUTO_INCREMENT,
+    pid int(11) unsigned NOT NULL DEFAULT 0,
+    tstamp int(11) unsigned NOT NULL DEFAULT 0,
+    crdate int(11) unsigned NOT NULL DEFAULT 0,
+    deleted tinyint(1) unsigned NOT NULL DEFAULT 0,
+    hidden tinyint(1) unsigned NOT NULL DEFAULT 0,
+
     role int(11) unsigned NOT NULL DEFAULT 0,
     directory int(11) unsigned NOT NULL DEFAULT 0,
     access varchar(5) NOT NULL DEFAULT 'read',
 
+    PRIMARY KEY (uid),
+    KEY parent (pid),
     UNIQUE INDEX idx_role_directory (role, directory),
     KEY idx_directory (directory)
 );
