@@ -366,7 +366,7 @@ class ImportService
                     ->set('last_name', $lastName)
                     ->set('thw_orgunit', (string)$orgUnitUid)
                     ->set('thw_last_import', $nowDatetime)
-                    ->set('thw_import_missing_since', '', true, Connection::PARAM_NULL)
+                    ->set('thw_import_missing_since', $qb->createNamedParameter(null, Connection::PARAM_NULL), false)
                     ->set('disable', '0')
                     ->set('tstamp', (string)$now)
                     ->executeStatement();
