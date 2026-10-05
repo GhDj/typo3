@@ -1,0 +1,7 @@
+plugin.tx_thwovssp_portal {
+    view {
+        templateRootPaths.0 = EXT:thw_ovssp/Resources/Private/Templates/
+        partialRootPaths.0 = EXT:thw_ovssp/Resources/Private/Partials/
+        layoutRootPaths.0 = EXT:thw_ovssp/Resources/Private/Layouts/
+    }
+}

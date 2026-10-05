@@ -51,8 +51,25 @@ $thwColumns = [
     'thw_portal_access' => [
         'label' => 'LLL:EXT:thw_ovssp/Resources/Private/Language/locallang_db.xlf:fe_users.thw_portal_access',
         'config' => [
-            'type' => 'check',
+            'type' => 'select',
+            'renderType' => 'selectSingle',
+            'items' => [
+                ['label' => 'LLL:EXT:thw_ovssp/Resources/Private/Language/locallang_db.xlf:fe_users.thw_portal_access.0', 'value' => 0],
+                ['label' => 'LLL:EXT:thw_ovssp/Resources/Private/Language/locallang_db.xlf:fe_users.thw_portal_access.1', 'value' => 1],
+                ['label' => 'LLL:EXT:thw_ovssp/Resources/Private/Language/locallang_db.xlf:fe_users.thw_portal_access.2', 'value' => 2],
+            ],
             'default' => 0,
+        ],
+    ],
+    'thw_roles' => [
+        'label' => 'LLL:EXT:thw_ovssp/Resources/Private/Language/locallang_db.xlf:fe_users.thw_roles',
+        'config' => [
+            'type' => 'select',
+            'renderType' => 'selectMultipleSideBySide',
+            'foreign_table' => 'tx_thwovssp_domain_model_role',
+            'MM' => 'tx_thwovssp_user_role_mm',
+            'size' => 5,
+            'autoSizeMax' => 10,
         ],
     ],
     'thw_last_import' => [
@@ -77,5 +94,5 @@ ExtensionManagementUtility::addTCAcolumns('fe_users', $thwColumns);
 
 ExtensionManagementUtility::addToAllTCAtypes(
     'fe_users',
-    '--div--;LLL:EXT:thw_ovssp/Resources/Private/Language/locallang_db.xlf:fe_users.tab.thw, thw_uid, thw_orgunit, thw_realm, thw_birthdate, thw_portal_access, thw_last_import, thw_import_missing_since'
+    '--div--;LLL:EXT:thw_ovssp/Resources/Private/Language/locallang_db.xlf:fe_users.tab.thw, thw_uid, thw_orgunit, thw_realm, thw_birthdate, thw_portal_access, thw_roles, thw_last_import, thw_import_missing_since'
 );

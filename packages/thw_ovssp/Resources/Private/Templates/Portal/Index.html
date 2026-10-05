@@ -1,0 +1,88 @@
+<html xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers"
+      data-namespace-typo3-fluid="true">
+
+<f:if condition="{accessDenied}">
+    <div class="alert alert-danger">Kein Zugang zum Portal. / No portal access.</div>
+    <f:then></f:then>
+</f:if>
+
+<f:if condition="!{accessDenied}">
+
+<h2>OV-SSP Portal</h2>
+
+<f:if condition="{isAdmin}">
+    <f:then>
+        <h3>Benutzer Ihrer OE / Users in Your OE</h3>
+        <f:if condition="{users}">
+            <f:then>
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>THW UID</th>
+                                <th>Username</th>
+                                <th>Name</th>
+                                <th>Status</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <f:for each="{users}" as="user">
+                                <tr class="{f:if(condition: user.disable, then: 'table-secondary')}">
+                                    <td>{user.thw_uid}</td>
+                                    <td><strong>{user.username}</strong></td>
+                                    <td>{user.first_name} {user.last_name}</td>
+                                    <td>
+                                        <f:if condition="{user.disable}">
+                                            <f:then><span class="badge bg-secondary">Deaktiviert</span></f:then>
+                                            <f:else><span class="badge bg-success">Aktiv</span></f:else>
+                                        </f:if>
+                                    </td>
+                                    <td>
+                                        <f:link.action action="userDetail" arguments="{userUid: user.uid}" class="btn btn-sm btn-outline-primary">
+                                            Details
+                                        </f:link.action>
+                                    </td>
+                                </tr>
+                            </f:for>
+                        </tbody>
+                    </table>
+                </div>
+            </f:then>
+            <f:else>
+                <div class="alert alert-info">Keine Benutzer gefunden. / No users found.</div>
+            </f:else>
+        </f:if>
+    </f:then>
+</f:if>
+
+<h3>Ihre Berechtigungen / Your Permissions</h3>
+<f:render partial="RightsTable" arguments="{rights: rights}" />
+
+<h3>Ihre Rollen / Your Roles</h3>
+<f:if condition="{allRoles}">
+    <ul class="list-group mb-3">
+        <f:for each="{allRoles}" as="role">
+            <f:if condition="{f:if(condition: '{roleUids}', then: '1', else: '0')}">
+                <f:variable name="isAssigned" value="0" />
+                <f:for each="{roleUids}" as="rid">
+                    <f:if condition="{rid} == {role.uid}">
+                        <f:variable name="isAssigned" value="1" />
+                    </f:if>
+                </f:for>
+                <f:if condition="{isAssigned} == 1">
+                    <li class="list-group-item list-group-item-success">
+                        <strong>{role.name}</strong>
+                        <f:if condition="{role.description}">
+                            <br /><small class="text-muted">{role.description}</small>
+                        </f:if>
+                    </li>
+                </f:if>
+            </f:if>
+        </f:for>
+    </ul>
+</f:if>
+
+</f:if>
+
+</html>

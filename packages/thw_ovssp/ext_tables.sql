@@ -23,14 +23,43 @@ CREATE TABLE tx_thwovssp_domain_model_directory (
     UNIQUE INDEX idx_name (name)
 );
 
+CREATE TABLE tx_thwovssp_domain_model_role (
+    name varchar(100) NOT NULL DEFAULT '',
+    role_group varchar(50) NOT NULL DEFAULT '',
+    description text,
+
+    UNIQUE INDEX idx_name (name)
+);
+
+CREATE TABLE tx_thwovssp_domain_model_directoryright (
+    role int(11) unsigned NOT NULL DEFAULT 0,
+    directory int(11) unsigned NOT NULL DEFAULT 0,
+    access varchar(5) NOT NULL DEFAULT 'read',
+
+    UNIQUE INDEX idx_role_directory (role, directory),
+    KEY idx_directory (directory)
+);
+
+CREATE TABLE tx_thwovssp_user_role_mm (
+    uid_local int(11) unsigned NOT NULL DEFAULT 0,
+    uid_foreign int(11) unsigned NOT NULL DEFAULT 0,
+    sorting int(11) unsigned NOT NULL DEFAULT 0,
+    sorting_foreign int(11) unsigned NOT NULL DEFAULT 0,
+
+    PRIMARY KEY (uid_local, uid_foreign),
+    KEY uid_local (uid_local),
+    KEY uid_foreign (uid_foreign)
+);
+
 CREATE TABLE fe_users (
     thw_uid int(11) unsigned NOT NULL DEFAULT 0,
     thw_orgunit int(11) unsigned NOT NULL DEFAULT 0,
     thw_realm varchar(2) NOT NULL DEFAULT '',
     thw_birthdate date DEFAULT NULL,
-    thw_portal_access tinyint(1) unsigned NOT NULL DEFAULT 0,
+    thw_portal_access tinyint(2) unsigned NOT NULL DEFAULT 0,
     thw_last_import datetime DEFAULT NULL,
     thw_import_missing_since datetime DEFAULT NULL,
+    thw_roles int(11) unsigned NOT NULL DEFAULT 0,
 
     UNIQUE INDEX idx_thw_uid (thw_uid),
     UNIQUE INDEX idx_realm_username (thw_realm, username)

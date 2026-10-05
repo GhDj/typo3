@@ -45,15 +45,27 @@ class UserTest extends TestCase
         self::assertSame('', $this->subject->getThwRealm());
     }
 
-    public function testPortalAccessDefaultsToFalse(): void
+    public function testPortalAccessDefaultsToZero(): void
     {
-        self::assertFalse($this->subject->isThwPortalAccess());
+        self::assertSame(0, $this->subject->getThwPortalAccess());
     }
 
-    public function testPortalAccessCanBeToggled(): void
+    public function testPortalAccessCanBeSetToAdmin(): void
     {
-        $this->subject->setThwPortalAccess(true);
-        self::assertTrue($this->subject->isThwPortalAccess());
+        $this->subject->setThwPortalAccess(2);
+        self::assertSame(2, $this->subject->getThwPortalAccess());
+        self::assertTrue($this->subject->isOvAdmin());
+    }
+
+    public function testIsOvAdminReturnsFalseForRegularUser(): void
+    {
+        $this->subject->setThwPortalAccess(1);
+        self::assertFalse($this->subject->isOvAdmin());
+    }
+
+    public function testIsOvAdminReturnsFalseForNoAccess(): void
+    {
+        self::assertFalse($this->subject->isOvAdmin());
     }
 
     public function testBirthdateDefaultsToNull(): void

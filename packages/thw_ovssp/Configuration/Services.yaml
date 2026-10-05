@@ -9,3 +9,6 @@ services:
 
   Init\Thw\Ovssp\Controller\ImportController:
     public: true
+
+  Init\Thw\Ovssp\Controller\PortalController:
+    public: true

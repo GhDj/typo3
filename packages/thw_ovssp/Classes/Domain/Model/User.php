@@ -39,7 +39,7 @@ class User extends AbstractEntity
 
     protected ?\DateTime $thwBirthdate = null;
 
-    protected bool $thwPortalAccess = false;
+    protected int $thwPortalAccess = 0;
 
     // -- THW system fields --
 
@@ -126,14 +126,19 @@ class User extends AbstractEntity
         $this->thwBirthdate = $thwBirthdate;
     }
 
-    public function isThwPortalAccess(): bool
+    public function getThwPortalAccess(): int
     {
         return $this->thwPortalAccess;
     }
 
-    public function setThwPortalAccess(bool $thwPortalAccess): void
+    public function setThwPortalAccess(int $thwPortalAccess): void
     {
         $this->thwPortalAccess = $thwPortalAccess;
+    }
+
+    public function isOvAdmin(): bool
+    {
+        return $this->thwPortalAccess === 2;
     }
 
     public function getThwLastImport(): ?\DateTime

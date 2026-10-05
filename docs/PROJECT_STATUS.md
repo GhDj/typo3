@@ -43,29 +43,40 @@ Das OV-SSP (Ortsverband Self-Service-Portal) ist eine TYPO3-Erweiterung für die
 
 ---
 
-## Phase 2 — Rollen & Verzeichnisberechtigungen 🔄 In Planung
+## Phase 2 — Rollen & Verzeichnisberechtigungen ✅ Implementiert
 
-### Geplanter Umfang
+### Was wurde umgesetzt
 
-**Rollen (Rollen-Tabelle):**
-- Benannte Berechtigungsbündel, z.B. "OV-User" (Pflichtrolle für alle aktiven Helfer)
-- Jede Rolle enthält eine Menge von Verzeichnisberechtigungen (lesen/schreiben/verweigern)
-- Rollen werden von zentralen Administratoren im TYPO3-Backend angelegt
+**Datenmodell:**
+- Rollen-Tabelle (`tx_thwovssp_domain_model_role`) — Benannte Berechtigungsbündel mit Gruppe und Beschreibung
+- Verzeichnisberechtigungen (`tx_thwovssp_domain_model_directoryright`) — Rolle→Verzeichnis mit Zugriffsstufe (lesen/schreiben/verweigern)
+- Benutzer-Rollen-Zuordnung (`tx_thwovssp_user_role_mm`) — M:N-Tabelle
+- Rollen sind global (für alle OE gleich), Verwaltung nur im TYPO3-Backend (zentrale Admins via TCA/Listenmodul)
 
-**Verzeichnisberechtigungen:**
-- Verknüpfung Rolle → Verzeichnis mit Zugriffsstufe (lesen, schreiben, verweigern)
+**Berechtigungsauflösung (RightsService):**
+- Kombinierte Berechtigungen pro Benutzer aus allen zugewiesenen Rollen
 - Auflösungsregel: **Schreiben schlägt Lesen, Verweigern überschreibt alles**
-- Kombinierte Berechtigungen werden pro Benutzer aus allen zugewiesenen Rollen berechnet
+- Sortierung nach Verzeichnis-Sortierkey, dann Name
 
-**Rollenzuweisung:**
-- OV-Administratoren weisen Benutzern Rollen zu / entfernen sie
-- Ein Benutzer kann mehrere Rollen haben
+**Portalzugang (`thw_portal_access`):**
+- Erweitert von Checkbox auf 3 Stufen: 0 = kein Zugang, 1 = Benutzer (eigene Daten), 2 = OV-Admin (OE verwalten)
+- OV-Admins werden über `thw_portal_access = 2` identifiziert
+- OV-Admins sehen nur Benutzer ihrer eigenen OE
 
-**Frontend-Portal:**
-- Frontend-Plugin (Extbase) für OV-Administratoren
-- Benutzerübersicht der eigenen OE
-- Rollenzuweisung und kombinierte Berechtigungsansicht
-- Authentifizierung zunächst über TYPO3 fe_user Login (SSO/OIDC in späterer Phase)
+**Frontend-Portal (Extbase-Plugin):**
+- Plugin `thwovssp_portal` — Benutzerübersicht, Detailansicht, Rollenzuweisung
+- OV-Admins: Benutzer der eigenen OE anzeigen, Rollen zuweisen/entfernen, kombinierte Berechtigungen einsehen
+- Deaktivierte Benutzer werden angezeigt (grau markiert), Rollenzuweisung ist gesperrt
+- Authentifizierung über TYPO3 fe_user Login (SSO/OIDC in späterer Phase)
+
+**Rollenverwaltung:**
+- Zentrale Admins verwalten Rollen und Verzeichnisberechtigungen im TYPO3-Backend (TCA/Listenmodul)
+- Vollständige TCA-Konfiguration für Rollen und Verzeichnisberechtigungen
+
+**Qualitätssicherung:**
+- 71 Unit-Tests (33 bestehend + 38 neu), alle bestanden
+- Alle neuen Dateien: PHP-Syntax geprüft, PHPStan-Level-9-konform geschrieben
+- PHP 8.4 kompatibel, QueryBuilder-only (kein Raw SQL)
 
 ---
 
@@ -74,16 +85,16 @@ Das OV-SSP (Ortsverband Self-Service-Portal) ist eine TYPO3-Erweiterung für die
 | Phase | Inhalt | Status |
 |---|---|---|
 | **Phase 1** | Datenschicht, CSV-Import, Backend-Modul | ✅ Abgeschlossen |
-| **Phase 2** | Rollen, Verzeichnisberechtigungen, Frontend-Portal | 🔄 In Planung |
+| **Phase 2** | Rollen, Verzeichnisberechtigungen, Frontend-Portal | ✅ Implementiert |
 | **Phase 3** | Berechtigungsgruppen (Fernzugang, KdB), Antragsworkflow | ⏳ Ausstehend |
 | **Phase 4** | OIDC/SSO-Anbindung (HA + EA IdP), Frontend-Authentifizierung | ⏳ Ausstehend |
 | **Phase 5** | Audit-Log, Kontingente, automatisierter Import (2× täglich) | ⏳ Ausstehend |
 
 ---
 
-## Offene Fragen
+## Beantwortete Fragen / Resolved Questions
 
-1. Soll die Rollenverwaltung (Anlegen/Bearbeiten von Rollen) nur zentral im TYPO3-Backend erfolgen, oder auch im Frontend-Portal?
-2. Sind Rollen global (für alle OE gleich) oder OE-spezifisch (jede OE kann eigene Rollen definieren)?
-3. Sollen deaktivierte Benutzer weiterhin im Frontend-Portal angezeigt werden?
-4. Welche fe_users sind OV-Administratoren? Wird dies über eine Benutzergruppe gesteuert?
+1. **Rollenverwaltung:** Nur zentral im TYPO3-Backend (TCA/Listenmodul). OV-Admins weisen nur bestehende Rollen zu.
+2. **Rollen-Scope:** Global (für alle OE gleich). Per-OE-Rollen ggf. in späterer Phase.
+3. **Deaktivierte Benutzer:** Werden im Frontend angezeigt (grau markiert), Rollenzuweisung gesperrt.
+4. **OV-Admin-Erkennung:** Über `thw_portal_access = 2` (Stufe 0 = kein Zugang, 1 = Benutzer, 2 = OV-Admin).

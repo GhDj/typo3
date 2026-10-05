@@ -49,6 +49,43 @@
                 <source>Description</source>
             </trans-unit>
 
+            <!-- Role -->
+            <trans-unit id="tx_thwovssp_domain_model_role" resname="tx_thwovssp_domain_model_role">
+                <source>Role</source>
+            </trans-unit>
+            <trans-unit id="tx_thwovssp_domain_model_role.name" resname="tx_thwovssp_domain_model_role.name">
+                <source>Name</source>
+            </trans-unit>
+            <trans-unit id="tx_thwovssp_domain_model_role.role_group" resname="tx_thwovssp_domain_model_role.role_group">
+                <source>Group</source>
+            </trans-unit>
+            <trans-unit id="tx_thwovssp_domain_model_role.description" resname="tx_thwovssp_domain_model_role.description">
+                <source>Description</source>
+            </trans-unit>
+
+            <!-- DirectoryRight -->
+            <trans-unit id="tx_thwovssp_domain_model_directoryright" resname="tx_thwovssp_domain_model_directoryright">
+                <source>Directory Right</source>
+            </trans-unit>
+            <trans-unit id="tx_thwovssp_domain_model_directoryright.role" resname="tx_thwovssp_domain_model_directoryright.role">
+                <source>Role</source>
+            </trans-unit>
+            <trans-unit id="tx_thwovssp_domain_model_directoryright.directory" resname="tx_thwovssp_domain_model_directoryright.directory">
+                <source>Directory</source>
+            </trans-unit>
+            <trans-unit id="tx_thwovssp_domain_model_directoryright.access" resname="tx_thwovssp_domain_model_directoryright.access">
+                <source>Access Level</source>
+            </trans-unit>
+            <trans-unit id="tx_thwovssp_domain_model_directoryright.access.read" resname="tx_thwovssp_domain_model_directoryright.access.read">
+                <source>Read</source>
+            </trans-unit>
+            <trans-unit id="tx_thwovssp_domain_model_directoryright.access.write" resname="tx_thwovssp_domain_model_directoryright.access.write">
+                <source>Write</source>
+            </trans-unit>
+            <trans-unit id="tx_thwovssp_domain_model_directoryright.access.deny" resname="tx_thwovssp_domain_model_directoryright.access.deny">
+                <source>Deny</source>
+            </trans-unit>
+
             <!-- fe_users THW fields -->
             <trans-unit id="fe_users.tab.thw" resname="fe_users.tab.thw">
                 <source>THW</source>
@@ -67,6 +104,18 @@
             </trans-unit>
             <trans-unit id="fe_users.thw_portal_access" resname="fe_users.thw_portal_access">
                 <source>Portal Access</source>
+            </trans-unit>
+            <trans-unit id="fe_users.thw_portal_access.0" resname="fe_users.thw_portal_access.0">
+                <source>No Access</source>
+            </trans-unit>
+            <trans-unit id="fe_users.thw_portal_access.1" resname="fe_users.thw_portal_access.1">
+                <source>User (View Own)</source>
+            </trans-unit>
+            <trans-unit id="fe_users.thw_portal_access.2" resname="fe_users.thw_portal_access.2">
+                <source>OV Admin (Manage OE)</source>
+            </trans-unit>
+            <trans-unit id="fe_users.thw_roles" resname="fe_users.thw_roles">
+                <source>Roles</source>
             </trans-unit>
             <trans-unit id="fe_users.thw_last_import" resname="fe_users.thw_last_import">
                 <source>Last Import</source>

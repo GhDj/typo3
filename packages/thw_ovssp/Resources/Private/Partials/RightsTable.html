@@ -1,0 +1,40 @@
+<html xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers"
+      data-namespace-typo3-fluid="true">
+
+<f:if condition="{rights}">
+    <f:then>
+        <div class="table-responsive">
+            <table class="table table-sm table-striped">
+                <thead>
+                    <tr>
+                        <th>Verzeichnis / Directory</th>
+                        <th>Zugriff / Access</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <f:for each="{rights}" as="right">
+                        <tr>
+                            <td>{right.directory_name}</td>
+                            <td>
+                                <f:if condition="{right.access} == 'deny'">
+                                    <f:then><span class="badge bg-danger">Verweigert / Deny</span></f:then>
+                                </f:if>
+                                <f:if condition="{right.access} == 'write'">
+                                    <f:then><span class="badge bg-primary">Schreiben / Write</span></f:then>
+                                </f:if>
+                                <f:if condition="{right.access} == 'read'">
+                                    <f:then><span class="badge bg-info">Lesen / Read</span></f:then>
+                                </f:if>
+                            </td>
+                        </tr>
+                    </f:for>
+                </tbody>
+            </table>
+        </div>
+    </f:then>
+    <f:else>
+        <div class="alert alert-info">Keine Berechtigungen. / No permissions assigned.</div>
+    </f:else>
+</f:if>
+
+</html>
