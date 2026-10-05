@@ -67,13 +67,16 @@ class ImportServiceTest extends TestCase
         return $qbMock;
     }
 
+    /**
+     * @param list<array<string, mixed>> $rows
+     */
     private function createResultMock(array $rows): Result&MockObject
     {
         $resultMock = $this->createMock(Result::class);
         $resultMock->method('fetchAllAssociative')->willReturn($rows);
-        $resultMock->method('fetchAssociative')->willReturnOnConsecutiveCalls(
-            ...array_merge($rows, [false])
-        );
+        $consecutive = array_values($rows);
+        $consecutive[] = false;
+        $resultMock->method('fetchAssociative')->willReturnOnConsecutiveCalls(...$consecutive);
         $resultMock->method('fetchOne')->willReturn(count($rows));
         return $resultMock;
     }

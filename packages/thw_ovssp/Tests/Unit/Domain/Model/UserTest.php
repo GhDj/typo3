@@ -65,7 +65,9 @@ class UserTest extends TestCase
     {
         $date = new \DateTime('1995-07-30');
         $this->subject->setThwBirthdate($date);
-        self::assertSame('1995-07-30', $this->subject->getThwBirthdate()->format('Y-m-d'));
+        $birthdate = $this->subject->getThwBirthdate();
+        self::assertNotNull($birthdate);
+        self::assertSame('1995-07-30', $birthdate->format('Y-m-d'));
     }
 
     public function testDisableDefaultsToFalse(): void

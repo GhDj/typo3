@@ -29,8 +29,8 @@ class ImportController
 
     public function uploadAction(ServerRequestInterface $request): ResponseInterface
     {
-        /** @var array<string, mixed> $body */
-        $body = (array)($request->getParsedBody() ?? []);
+        $parsedBody = $request->getParsedBody();
+        $body = is_array($parsedBody) ? $parsedBody : [];
         $type = (string)($body['type'] ?? '');
         $realm = strtoupper((string)($body['realm'] ?? ''));
         $pid = (int)($body['pid'] ?? 0);
@@ -207,19 +207,23 @@ class ImportController
     }
 
     /**
-     * @return array{currentPage: int, totalPages: int, perPage: int, route: string, pages: list<array{number: int, isCurrent: bool}>, hasPrev: bool, hasNext: bool, prevPage: int, nextPage: int}
+     * @return array<string, mixed>
      */
     private function buildPagination(int $currentPage, int $perPage, int $totalCount, string $route): array
     {
         $totalPages = max(1, (int)ceil($totalCount / $perPage));
         $currentPage = min($currentPage, $totalPages);
 
+        /** @var list<array{number: int, isCurrent: bool}> $pages */
         $pages = [];
+        $lastNumber = 0;
         for ($i = 1; $i <= $totalPages; $i++) {
             if ($i <= 2 || $i >= $totalPages - 1 || abs($i - $currentPage) <= 2) {
                 $pages[] = ['number' => $i, 'isCurrent' => $i === $currentPage];
-            } elseif ($pages !== [] && ($pages[array_key_last($pages)]['number'] ?? 0) !== -1) {
-                $pages[] = ['number' => -1, 'isCurrent' => false]; // ellipsis marker
+                $lastNumber = $i;
+            } elseif ($lastNumber !== -1) {
+                $pages[] = ['number' => -1, 'isCurrent' => false];
+                $lastNumber = -1;
             }
         }
 
