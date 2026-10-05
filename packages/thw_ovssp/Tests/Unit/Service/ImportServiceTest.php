@@ -10,6 +10,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Database\Query\Expression\CompositeExpression;
 use TYPO3\CMS\Core\Database\Query\Expression\ExpressionBuilder;
 use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 use TYPO3\CMS\Core\Database\Query\Restriction\QueryRestrictionContainerInterface;
@@ -43,7 +44,7 @@ class ImportServiceTest extends TestCase
         $exprMock->method('gt')->willReturn('1=1');
         $exprMock->method('lt')->willReturn('1=1');
         $exprMock->method('isNull')->willReturn('1=1');
-        $compositeExprMock = $this->createMock(\TYPO3\CMS\Core\Database\Query\Expression\CompositeExpression::class);
+        $compositeExprMock = $this->createMock(CompositeExpression::class);
         $exprMock->method('or')->willReturn($compositeExprMock);
 
         $qbMock->method('createNamedParameter')->willReturnCallback(
