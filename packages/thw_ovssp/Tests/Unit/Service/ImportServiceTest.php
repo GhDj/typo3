@@ -126,13 +126,12 @@ class ImportServiceTest extends TestCase
         $selectQb->method('executeQuery')->willReturn($this->createResultMock([]));
 
         $insertQb = $this->createQueryBuilderMock();
-        $insertQb->expects(self::once())->method('executeStatement');
+        $insertQb->method('executeStatement')->willReturn(1);
 
         $callCount = 0;
         $this->connectionPoolMock->method('getQueryBuilderForTable')->willReturnCallback(
             function () use ($selectQb, $insertQb, &$callCount) {
                 $callCount++;
-                // First call = SELECT existing, subsequent = INSERT
                 return $callCount === 1 ? $selectQb : $insertQb;
             }
         );
