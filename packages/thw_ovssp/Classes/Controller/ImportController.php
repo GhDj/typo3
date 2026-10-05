@@ -7,6 +7,7 @@ namespace Init\Thw\Ovssp\Controller;
 use Init\Thw\Ovssp\Service\ImportService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\UploadedFileInterface;
 use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
 use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
@@ -31,9 +32,9 @@ class ImportController
     {
         $parsedBody = $request->getParsedBody();
         $body = is_array($parsedBody) ? $parsedBody : [];
-        $type = (string)($body['type'] ?? '');
-        $realm = strtoupper((string)($body['realm'] ?? ''));
-        $pid = (int)($body['pid'] ?? 0);
+        $type = isset($body['type']) && is_string($body['type']) ? $body['type'] : '';
+        $realm = isset($body['realm']) && is_string($body['realm']) ? strtoupper($body['realm']) : '';
+        $pid = isset($body['pid']) ? (int)$body['pid'] : 0;
 
         $errors = [];
 
@@ -46,7 +47,9 @@ class ImportController
         }
 
         $uploadedFiles = $request->getUploadedFiles();
-        $uploadedFile = $uploadedFiles['importFile'] ?? null;
+        $uploadedFile = isset($uploadedFiles['importFile']) && $uploadedFiles['importFile'] instanceof UploadedFileInterface
+            ? $uploadedFiles['importFile']
+            : null;
 
         if ($uploadedFile === null || $uploadedFile->getError() !== UPLOAD_ERR_OK) {
             $errors[] = 'Please upload a valid CSV file.';
@@ -65,7 +68,7 @@ class ImportController
         }
 
         $tempFile = GeneralUtility::tempnam('ovssp_import_', '.csv');
-        /** @var \Psr\Http\Message\UploadedFileInterface $uploadedFile */
+        /** @var UploadedFileInterface $uploadedFile */
         $uploadedFile->moveTo($tempFile);
 
         try {
@@ -86,19 +89,20 @@ class ImportController
 
     public function listOrgunitsAction(ServerRequestInterface $request): ResponseInterface
     {
-        $page = max(1, (int)($request->getQueryParams()['page'] ?? 1));
+        $page = $this->getPageFromRequest($request);
         $perPage = 50;
         $offset = ($page - 1) * $perPage;
         $tableName = 'tx_thwovssp_domain_model_orgunit';
 
         $qb = $this->connectionPool->getQueryBuilderForTable($tableName);
         $qb->getRestrictions()->removeAll();
-        $totalCount = (int)$qb
+        $countResult = $qb
             ->count('*')
             ->from($tableName)
             ->where($qb->expr()->eq('deleted', $qb->createNamedParameter(0, Connection::PARAM_INT)))
             ->executeQuery()
             ->fetchOne();
+        $totalCount = is_numeric($countResult) ? (int)$countResult : 0;
 
         $qb = $this->connectionPool->getQueryBuilderForTable($tableName);
         $qb->getRestrictions()->removeAll();
@@ -124,19 +128,20 @@ class ImportController
 
     public function listDirectoriesAction(ServerRequestInterface $request): ResponseInterface
     {
-        $page = max(1, (int)($request->getQueryParams()['page'] ?? 1));
+        $page = $this->getPageFromRequest($request);
         $perPage = 50;
         $offset = ($page - 1) * $perPage;
         $tableName = 'tx_thwovssp_domain_model_directory';
 
         $qb = $this->connectionPool->getQueryBuilderForTable($tableName);
         $qb->getRestrictions()->removeAll();
-        $totalCount = (int)$qb
+        $countResult = $qb
             ->count('*')
             ->from($tableName)
             ->where($qb->expr()->eq('deleted', $qb->createNamedParameter(0, Connection::PARAM_INT)))
             ->executeQuery()
             ->fetchOne();
+        $totalCount = is_numeric($countResult) ? (int)$countResult : 0;
 
         $qb = $this->connectionPool->getQueryBuilderForTable($tableName);
         $qb->getRestrictions()->removeAll();
@@ -163,13 +168,13 @@ class ImportController
 
     public function listUsersAction(ServerRequestInterface $request): ResponseInterface
     {
-        $page = max(1, (int)($request->getQueryParams()['page'] ?? 1));
+        $page = $this->getPageFromRequest($request);
         $perPage = 50;
         $offset = ($page - 1) * $perPage;
 
         $qb = $this->connectionPool->getQueryBuilderForTable('fe_users');
         $qb->getRestrictions()->removeAll();
-        $totalCount = (int)$qb
+        $countResult = $qb
             ->count('*')
             ->from('fe_users')
             ->where(
@@ -178,6 +183,7 @@ class ImportController
             )
             ->executeQuery()
             ->fetchOne();
+        $totalCount = is_numeric($countResult) ? (int)$countResult : 0;
 
         $qb = $this->connectionPool->getQueryBuilderForTable('fe_users');
         $qb->getRestrictions()->removeAll();
@@ -204,6 +210,13 @@ class ImportController
             'pagination' => $this->buildPagination($page, $perPage, $totalCount, 'admin_thwovssp_import.list-users'),
         ]);
         return $moduleTemplate->renderResponse('ListUsers');
+    }
+
+    private function getPageFromRequest(ServerRequestInterface $request): int
+    {
+        $queryParams = $request->getQueryParams();
+        $page = isset($queryParams['page']) ? (int)$queryParams['page'] : 1;
+        return max(1, $page);
     }
 
     /**

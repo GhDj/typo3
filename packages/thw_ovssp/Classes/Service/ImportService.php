@@ -101,9 +101,11 @@ class ImportService
             ->executeQuery()
             ->fetchAllAssociative();
 
+        /** @var array<int, array<string, string>> $existing */
         $existing = [];
         foreach ($existingRows as $row) {
-            $existing[(int)$row['thw_oe_uid']] = $row;
+            $key = is_numeric($row['thw_oe_uid'] ?? null) ? (int)$row['thw_oe_uid'] : 0;
+            $existing[$key] = array_map(static fn(mixed $v): string => is_scalar($v) ? (string)$v : '', $row);
         }
 
         foreach ($rows as $row) {
@@ -122,18 +124,18 @@ class ImportService
             } else {
                 $changes = [];
                 foreach (['oe_code', 'name', 'mail_address', 'regionalbereich_code', 'landesverband_code'] as $col) {
-                    if ($ex[$col] !== $row[$col]) {
+                    if (($ex[$col] ?? '') !== $row[$col]) {
                         $changes[$col] = $row[$col];
                     }
                 }
                 if (!empty($changes)) {
                     $qb = $this->connectionPool->getQueryBuilderForTable($tableName);
                     $qb->update($tableName)
-                        ->where($qb->expr()->eq('uid', $qb->createNamedParameter((int)$ex['uid'], Connection::PARAM_INT)));
+                        ->where($qb->expr()->eq('uid', $qb->createNamedParameter((int)($ex['uid'] ?? 0), Connection::PARAM_INT)));
                     foreach ($changes as $col => $val) {
                         $qb->set($col, $val);
                     }
-                    $qb->set('tstamp', $now);
+                    $qb->set('tstamp', (string)$now);
                     $qb->executeStatement();
                     $updated++;
                 } else {
@@ -211,9 +213,11 @@ class ImportService
             ->executeQuery()
             ->fetchAllAssociative();
 
+        /** @var array<string, array<string, string>> $existing */
         $existing = [];
         foreach ($existingRows as $row) {
-            $existing[$row['name']] = $row;
+            $key = is_string($row['name'] ?? null) ? $row['name'] : '';
+            $existing[$key] = array_map(static fn(mixed $v): string => is_scalar($v) ? (string)$v : '', $row);
         }
 
         foreach ($rows as $row) {
@@ -229,14 +233,14 @@ class ImportService
             } else {
                 $changes = [];
                 foreach (['allows_read', 'allows_write', 'sort_key', 'description'] as $col) {
-                    if ($ex[$col] != $row[$col]) {
+                    if (($ex[$col] ?? '') != $row[$col]) {
                         $changes[$col] = $row[$col];
                     }
                 }
                 if (!empty($changes)) {
                     $qb = $this->connectionPool->getQueryBuilderForTable($tableName);
                     $qb->update($tableName)
-                        ->where($qb->expr()->eq('uid', $qb->createNamedParameter((int)$ex['uid'], Connection::PARAM_INT)));
+                        ->where($qb->expr()->eq('uid', $qb->createNamedParameter((int)($ex['uid'] ?? 0), Connection::PARAM_INT)));
                     foreach ($changes as $col => $val) {
                         $qb->set($col, (string)($val ?? ''));
                     }
@@ -271,7 +275,8 @@ class ImportService
             ->fetchAllAssociative();
 
         foreach ($ouRows as $row) {
-            $orgUnitMap[(string)$row['oe_code']] = (int)$row['uid'];
+            $oeCode = is_string($row['oe_code'] ?? null) ? $row['oe_code'] : '';
+            $orgUnitMap[$oeCode] = is_numeric($row['uid'] ?? null) ? (int)$row['uid'] : 0;
         }
 
         if (empty($orgUnitMap)) {
@@ -307,7 +312,8 @@ class ImportService
             ->fetchAllAssociative();
 
         foreach ($existingRows as $row) {
-            $existingUsers[(int)$row['thw_uid']] = (int)$row['uid'];
+            $thwUid = is_numeric($row['thw_uid'] ?? null) ? (int)$row['thw_uid'] : 0;
+            $existingUsers[$thwUid] = is_numeric($row['uid'] ?? null) ? (int)$row['uid'] : 0;
         }
 
         $now = time();

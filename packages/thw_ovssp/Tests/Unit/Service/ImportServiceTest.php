@@ -48,7 +48,7 @@ class ImportServiceTest extends TestCase
         $exprMock->method('or')->willReturn($compositeExprMock);
 
         $qbMock->method('createNamedParameter')->willReturnCallback(
-            fn($value) => "'" . $value . "'"
+            static fn(string|int|float|null $value): string => "'" . (string)$value . "'"
         );
 
         // Fluent interface: all builder methods return $qbMock
