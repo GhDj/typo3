@@ -10,7 +10,7 @@ use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 
 class ImportService
 {
-    private const USER_HEADERS = ['thw_uid', 'username', 'first_name', 'last_name', 'thw_oe_uid'];
+    private const USER_HEADERS = ['thw_uid', 'username', 'first_name', 'last_name', 'oe_code'];
     private const ORGUNIT_HEADERS = ['thw_oe_uid', 'oe_code', 'name', 'mail_address', 'Regionalbereich', 'Landesverband'];
     private const DIRECTORY_HEADERS = ['Verzeichnis', 'lesen', 'schreiben', 'SortKey', 'Beschreibung'];
 
@@ -259,19 +259,19 @@ class ImportService
      */
     private function importUsers(string $filePath, string $realm, int $pid): array
     {
-        // Pre-load OrgUnit map: thw_oe_uid -> TYPO3 uid
+        // Pre-load OrgUnit map: oe_code -> TYPO3 uid
         $orgUnitMap = [];
         $qb = $this->connectionPool->getQueryBuilderForTable('tx_thwovssp_domain_model_orgunit');
         $qb->getRestrictions()->removeAll();
         $ouRows = $qb
-            ->select('uid', 'thw_oe_uid')
+            ->select('uid', 'oe_code')
             ->from('tx_thwovssp_domain_model_orgunit')
             ->where($qb->expr()->eq('deleted', $qb->createNamedParameter(0, Connection::PARAM_INT)))
             ->executeQuery()
             ->fetchAllAssociative();
 
         foreach ($ouRows as $row) {
-            $orgUnitMap[(int)$row['thw_oe_uid']] = (int)$row['uid'];
+            $orgUnitMap[(string)$row['oe_code']] = (int)$row['uid'];
         }
 
         if (empty($orgUnitMap)) {
@@ -334,7 +334,7 @@ class ImportService
             }
 
             $thwUid = trim((string)$fields[0]);
-            $thwOeUid = trim((string)$fields[4]);
+            $oeCode = trim((string)$fields[4]);
 
             if (!ctype_digit($thwUid)) {
                 $skipped++;
@@ -344,10 +344,10 @@ class ImportService
                 continue;
             }
 
-            if (!ctype_digit($thwOeUid) || !isset($orgUnitMap[(int)$thwOeUid])) {
+            if ($oeCode === '' || !isset($orgUnitMap[$oeCode])) {
                 $skipped++;
                 if (count($skippedErrors) < 50) {
-                    $skippedErrors[] = "Line $lineNum: thw_oe_uid '$thwOeUid' invalid or not found — skipped";
+                    $skippedErrors[] = "Line $lineNum: oe_code '$oeCode' invalid or not found — skipped";
                 }
                 continue;
             }
@@ -356,7 +356,7 @@ class ImportService
             $username = trim((string)$fields[1]);
             $firstName = trim((string)$fields[2]);
             $lastName = trim((string)$fields[3]);
-            $orgUnitUid = $orgUnitMap[(int)$thwOeUid];
+            $orgUnitUid = $orgUnitMap[$oeCode];
 
             if (isset($existingUsers[$thwUidInt])) {
                 // Update existing user

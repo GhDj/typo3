@@ -187,7 +187,7 @@ class ImportServiceTest extends TestCase
     {
         $qb = $this->createQueryBuilderMock();
         $qb->method('executeQuery')->willReturn($this->createResultMock([
-            ['uid' => 1, 'thw_oe_uid' => 2000612],
+            ['uid' => 1, 'oe_code' => 'OAAC'],
         ]));
         $this->connectionPoolMock->method('getQueryBuilderForTable')->willReturn($qb);
 
@@ -205,7 +205,7 @@ class ImportServiceTest extends TestCase
     {
         $qb = $this->createQueryBuilderMock();
         // First call: orgunit lookup, second call: existing users, third+: insert/update/deactivation
-        $orgUnitResult = $this->createResultMock([['uid' => 1, 'thw_oe_uid' => 2000612]]);
+        $orgUnitResult = $this->createResultMock([['uid' => 1, 'oe_code' => 'OAAC']]);
         $emptyResult = $this->createResultMock([]);
         $qb->method('executeQuery')->willReturnOnConsecutiveCalls($orgUnitResult, $emptyResult);
         $qb->method('executeStatement')->willReturn(0);
@@ -223,7 +223,7 @@ class ImportServiceTest extends TestCase
     public function testUserImportSkipsUnknownOrgUnit(): void
     {
         $qb = $this->createQueryBuilderMock();
-        $orgUnitResult = $this->createResultMock([['uid' => 1, 'thw_oe_uid' => 2000612]]);
+        $orgUnitResult = $this->createResultMock([['uid' => 1, 'oe_code' => 'OAAC']]);
         $emptyResult = $this->createResultMock([]);
         $qb->method('executeQuery')->willReturnOnConsecutiveCalls($orgUnitResult, $emptyResult);
         $qb->method('executeStatement')->willReturn(0);
@@ -234,13 +234,13 @@ class ImportServiceTest extends TestCase
         self::assertTrue($result['success']);
         self::assertSame(1, $result['total']);
         self::assertSame(1, $result['skipped']);
-        self::assertStringContainsString('invalid or not found', $result['errors'][0]);
+        self::assertStringContainsString('oe_code', $result['errors'][0]);
     }
 
     public function testUserImportMixedValidAndInvalidRows(): void
     {
         $qb = $this->createQueryBuilderMock();
-        $orgUnitResult = $this->createResultMock([['uid' => 1, 'thw_oe_uid' => 2000612]]);
+        $orgUnitResult = $this->createResultMock([['uid' => 1, 'oe_code' => 'OAAC']]);
         $emptyResult = $this->createResultMock([]);
         $qb->method('executeQuery')->willReturnOnConsecutiveCalls($orgUnitResult, $emptyResult);
         $qb->method('executeStatement')->willReturn(1); // each insert returns 1
@@ -258,7 +258,7 @@ class ImportServiceTest extends TestCase
     public function testUserImportSkippedErrorsContainLineNumbers(): void
     {
         $qb = $this->createQueryBuilderMock();
-        $orgUnitResult = $this->createResultMock([['uid' => 1, 'thw_oe_uid' => 2000612]]);
+        $orgUnitResult = $this->createResultMock([['uid' => 1, 'oe_code' => 'OAAC']]);
         $emptyResult = $this->createResultMock([]);
         $qb->method('executeQuery')->willReturnOnConsecutiveCalls($orgUnitResult, $emptyResult);
         $qb->method('executeStatement')->willReturn(1);
@@ -271,13 +271,13 @@ class ImportServiceTest extends TestCase
         self::assertStringContainsString('Line 5', $result['errors'][1]);
         self::assertStringContainsString('#NV', $result['errors'][1]);
         self::assertStringContainsString('Line 6', $result['errors'][2]);
-        self::assertStringContainsString('9999999', $result['errors'][2]);
+        self::assertStringContainsString('ZZZZ', $result['errors'][2]);
     }
 
     public function testUserImportAllValidSucceeds(): void
     {
         $qb = $this->createQueryBuilderMock();
-        $orgUnitResult = $this->createResultMock([['uid' => 1, 'thw_oe_uid' => 2000612]]);
+        $orgUnitResult = $this->createResultMock([['uid' => 1, 'oe_code' => 'OAAC']]);
         $emptyResult = $this->createResultMock([]);
         $qb->method('executeQuery')->willReturnOnConsecutiveCalls($orgUnitResult, $emptyResult);
         $qb->method('executeStatement')->willReturn(1);
@@ -295,7 +295,7 @@ class ImportServiceTest extends TestCase
     public function testUserImportAllRowsSkippedStillSucceeds(): void
     {
         $qb = $this->createQueryBuilderMock();
-        $orgUnitResult = $this->createResultMock([['uid' => 1, 'thw_oe_uid' => 2000612]]);
+        $orgUnitResult = $this->createResultMock([['uid' => 1, 'oe_code' => 'OAAC']]);
         $emptyResult = $this->createResultMock([]);
         $qb->method('executeQuery')->willReturnOnConsecutiveCalls($orgUnitResult, $emptyResult);
         $qb->method('executeStatement')->willReturn(0);
