@@ -156,16 +156,31 @@ class SetupDemoCommand extends Command
         if (!is_string($siteDir)) {
             $siteDir = '/var/www/html';
         }
-        $configDir = $siteDir . '/config/sites/ovssp';
+        // Check if any site config already references this root page
+        $sitesDir = $siteDir . '/config/sites';
+        if (is_dir($sitesDir)) {
+            $dirs = scandir($sitesDir);
+            if (is_array($dirs)) {
+                foreach ($dirs as $dir) {
+                    if ($dir === '.' || $dir === '..') {
+                        continue;
+                    }
+                    $candidate = $sitesDir . '/' . $dir . '/config.yaml';
+                    if (file_exists($candidate)) {
+                        $content = file_get_contents($candidate);
+                        if (is_string($content) && str_contains($content, 'rootPageId: ' . $rootPageUid)) {
+                            $io->comment('Site configuration already exists at ' . $dir . '/, skipping.');
 
-        if (file_exists($configDir . '/config.yaml')) {
-            $io->comment('Site configuration already exists, skipping.');
-
-            return;
+                            return;
+                        }
+                    }
+                }
+            }
         }
 
         $io->section('Creating site configuration');
 
+        $configDir = $sitesDir . '/ov-ssp';
         if (!is_dir($configDir)) {
             mkdir($configDir, 0775, true);
         }
@@ -188,7 +203,7 @@ errorHandling: []
 YAML;
 
         file_put_contents($configDir . '/config.yaml', $yaml);
-        $io->writeln('  Created config/sites/ovssp/config.yaml (with site set dependency)');
+        $io->writeln('  Created config/sites/ov-ssp/config.yaml (rootPageId=' . $rootPageUid . ')');
     }
 
     private function createFeGroup(int $storagePid, SymfonyStyle $io): void

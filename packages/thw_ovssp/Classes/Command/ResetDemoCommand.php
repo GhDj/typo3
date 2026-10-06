@@ -130,16 +130,22 @@ class ResetDemoCommand extends Command
         if (!is_string($siteDir)) {
             $siteDir = '/var/www/html';
         }
-        $configFile = $siteDir . '/config/sites/ovssp/config.yaml';
 
-        if (file_exists($configFile)) {
-            unlink($configFile);
-            $configDir = dirname($configFile);
-            if (is_dir($configDir) && count((array) scandir($configDir)) === 2) {
-                rmdir($configDir);
+        $deleted = false;
+        foreach (['ov-ssp', 'ovssp'] as $dirName) {
+            $configFile = $siteDir . '/config/sites/' . $dirName . '/config.yaml';
+            if (file_exists($configFile)) {
+                unlink($configFile);
+                $configDir = dirname($configFile);
+                if (is_dir($configDir) && count((array) scandir($configDir)) === 2) {
+                    rmdir($configDir);
+                }
+                $io->writeln('  Deleted site configuration (' . $dirName . ')');
+                $deleted = true;
             }
-            $io->writeln('  Deleted site configuration');
-        } else {
+        }
+
+        if (!$deleted) {
             $io->comment('  No site configuration found, skipping.');
         }
     }

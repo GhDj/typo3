@@ -1,5 +1,2 @@
 name: thw/thw-ovssp
 label: THW OV-SSP
-dependencies:
-  - typo3/fluid-styled-content
-  - typo3/felogin
