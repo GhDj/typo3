@@ -9,6 +9,7 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use TYPO3\CMS\Core\Core\Environment;
 use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 
@@ -126,10 +127,7 @@ class ResetDemoCommand extends Command
 
     private function deleteSiteConfig(SymfonyStyle $io): void
     {
-        $siteDir = getenv('TYPO3_PATH_ROOT') ?: getcwd();
-        if (!is_string($siteDir)) {
-            $siteDir = '/var/www/html';
-        }
+        $siteDir = Environment::getProjectPath();
 
         $deleted = false;
         foreach (['ov-ssp', 'ovssp'] as $dirName) {

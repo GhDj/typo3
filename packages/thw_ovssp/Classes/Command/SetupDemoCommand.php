@@ -10,6 +10,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use TYPO3\CMS\Core\Core\Environment;
 use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 
@@ -153,10 +154,7 @@ class SetupDemoCommand extends Command
 
     private function createSiteConfiguration(int $rootPageUid, string $baseUrl, SymfonyStyle $io): void
     {
-        $siteDir = getenv('TYPO3_PATH_ROOT') ?: getcwd();
-        if (!is_string($siteDir)) {
-            $siteDir = '/var/www/html';
-        }
+        $siteDir = Environment::getProjectPath();
         $sitesDir = $siteDir . '/config/sites';
         $configDir = null;
 
@@ -240,10 +238,7 @@ TYPOSCRIPT;
 
     private function ensureTypoScript(SymfonyStyle $io): void
     {
-        $siteDir = getenv('TYPO3_PATH_ROOT') ?: getcwd();
-        if (!is_string($siteDir)) {
-            $siteDir = '/var/www/html';
-        }
+        $siteDir = Environment::getProjectPath();
         $sitesDir = $siteDir . '/config/sites';
 
         $io->section('Ensuring TypoScript setup');
@@ -294,10 +289,11 @@ TYPOSCRIPT;
                 continue;
             }
             $tsFile = $configDir . '/setup.typoscript';
-            $io->writeln('  Checking: ' . $tsFile);
-            $io->writeln('  file_exists: ' . (file_exists($tsFile) ? 'YES' : 'NO'));
-            $io->writeln('  is_file: ' . (is_file($tsFile) ? 'YES' : 'NO'));
-            $io->writeln('  Dir contents: ' . implode(', ', array_diff((array) scandir($configDir), ['.', '..'])));
+            if (file_exists($tsFile)) {
+                $io->writeln('  setup.typoscript already exists in ' . $dir . '/');
+                $written = true;
+                continue;
+            }
             $result = file_put_contents($tsFile, $setupTs);
             if ($result === false) {
                 $io->error('Failed to write ' . $tsFile . ' — check permissions');
