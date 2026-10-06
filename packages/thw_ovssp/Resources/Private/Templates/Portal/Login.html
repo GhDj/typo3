@@ -13,15 +13,6 @@
         <p class="mt-4"><a href="/portal" class="btn btn-primary">Zum Portal / Go to Portal</a></p>
     </f:then>
     <f:else>
-        <f:if condition="{debug}">
-            <div class="alert alert-warning" style="font-family:monospace;font-size:12px">
-                <strong>DEBUG:</strong><br/>
-                <f:for each="{debug}" as="val" key="key">
-                    {key}: {val}<br/>
-                </f:for>
-            </div>
-        </f:if>
-
         <h2>Login</h2>
 
         <f:if condition="{loginFailed}">
@@ -33,7 +24,6 @@
 
         <form method="post" action="">
             <input type="hidden" name="logintype" value="login" />
-            <input type="hidden" name="pid" value="{storagePid}" />
             <div class="mb-3">
                 <label for="user" class="form-label">Benutzername / Username</label>
                 <input type="text" name="user" id="user" class="form-control" required="required" autocomplete="username" />

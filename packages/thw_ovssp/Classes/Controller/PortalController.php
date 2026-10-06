@@ -33,29 +33,17 @@ class PortalController extends ActionController
         $storagePid = $this->getFeUserStoragePid();
         $this->view->assign('storagePid', $storagePid);
 
-        // Debug info
-        $userAspect = $this->context->getAspect('frontend.user');
-        $debug = [
-            'method' => $this->request->getMethod(),
-            'isLoggedIn' => $userAspect->isLoggedIn() ? 'TRUE' : 'FALSE',
-            'userId' => $userAspect->get('id'),
-            'groupIds' => implode(',', $userAspect->getGroupIds()),
-            'checkFeUserPid' => var_export($GLOBALS['TYPO3_CONF_VARS']['FE']['checkFeUserPid'] ?? 'NOT_SET', true),
-        ];
-        $body = $this->request->getParsedBody();
-        if (is_array($body)) {
-            $debug['post_logintype'] = $body['logintype'] ?? '(none)';
-            $debug['post_user'] = $body['user'] ?? '(none)';
-            $debug['post_pid'] = $body['pid'] ?? '(none)';
-        }
-        $this->view->assign('debug', $debug);
-
-        // Check if login was just attempted (POST only)
+        // After login POST, redirect so session cookie takes effect
         if ($this->request->getMethod() === 'POST') {
             $parsedBody = $this->request->getParsedBody();
             if (is_array($parsedBody) && ($parsedBody['logintype'] ?? '') === 'login') {
-                $this->view->assign('loginFailed', true);
+                return $this->redirectToUri($this->request->getUri()->getPath() . '?loginAttempted=1');
             }
+        }
+
+        // Show error if redirected after failed login
+        if ($this->request->getQueryParams()['loginAttempted'] ?? false) {
+            $this->view->assign('loginFailed', true);
         }
 
         return $this->htmlResponse();
