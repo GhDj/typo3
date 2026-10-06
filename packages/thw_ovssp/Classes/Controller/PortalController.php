@@ -6,6 +6,7 @@ namespace Init\Thw\Ovssp\Controller;
 
 use Init\Thw\Ovssp\Service\RightsService;
 use Psr\Http\Message\ResponseInterface;
+use TYPO3\CMS\Core\Context\Context;
 use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Extbase\Mvc\Controller\ActionController;
@@ -15,6 +16,7 @@ class PortalController extends ActionController
     public function __construct(
         private readonly ConnectionPool $connectionPool,
         private readonly RightsService $rightsService,
+        private readonly Context $context,
     ) {}
 
     public function loginAction(): ResponseInterface
@@ -159,17 +161,17 @@ class PortalController extends ActionController
      */
     private function getCurrentUser(): ?array
     {
-        $frontendUser = $this->request->getAttribute('frontend.user');
-        if ($frontendUser === null) {
+        $userAspect = $this->context->getAspect('frontend.user');
+        if (!$userAspect->isLoggedIn()) {
             return null;
         }
 
-        $userRecord = $frontendUser->user ?? null;
-        if (!is_array($userRecord) || !isset($userRecord['uid'])) {
+        $userId = $userAspect->get('id');
+        if (!is_int($userId) || $userId === 0) {
             return null;
         }
 
-        return $userRecord;
+        return $this->getUserByUid($userId);
     }
 
     /**
