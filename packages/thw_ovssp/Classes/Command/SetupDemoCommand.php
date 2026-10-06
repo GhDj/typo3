@@ -114,10 +114,11 @@ class SetupDemoCommand extends Command
     private function insertPage(Connection $conn, int $pid, string $title, string $doktype, int $sorting, int $now, bool $isRoot = false): int
     {
         $doktypeMap = ['standard' => 1, 'sysfolder' => 254];
+        $slug = $isRoot ? '/' : '/' . strtolower(str_replace(' ', '-', $title));
         $data = [
             'pid' => $pid,
             'title' => $title,
-            'slug' => '/' . strtolower(str_replace(' ', '-', $title)),
+            'slug' => $slug,
             'doktype' => $doktypeMap[$doktype] ?? 1,
             'sorting' => $sorting * 256,
             'crdate' => $now,
