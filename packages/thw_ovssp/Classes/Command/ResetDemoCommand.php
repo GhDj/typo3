@@ -133,10 +133,14 @@ class ResetDemoCommand extends Command
 
         $deleted = false;
         foreach (['ov-ssp', 'ovssp'] as $dirName) {
-            $configFile = $siteDir . '/config/sites/' . $dirName . '/config.yaml';
-            if (file_exists($configFile)) {
-                unlink($configFile);
-                $configDir = dirname($configFile);
+            $configDir = $siteDir . '/config/sites/' . $dirName;
+            if (is_dir($configDir)) {
+                foreach (['config.yaml', 'setup.typoscript', 'constants.typoscript'] as $file) {
+                    $filePath = $configDir . '/' . $file;
+                    if (file_exists($filePath)) {
+                        unlink($filePath);
+                    }
+                }
                 if (is_dir($configDir) && count((array) scandir($configDir)) === 2) {
                     rmdir($configDir);
                 }

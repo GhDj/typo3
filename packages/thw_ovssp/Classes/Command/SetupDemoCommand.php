@@ -203,7 +203,33 @@ errorHandling: []
 YAML;
 
         file_put_contents($configDir . '/config.yaml', $yaml);
-        $io->writeln('  Created config/sites/ov-ssp/config.yaml (rootPageId=' . $rootPageUid . ')');
+
+        // Write TypoScript directly in site config directory (TYPO3 v14)
+        $setupTs = <<<'TYPOSCRIPT'
+@import 'EXT:fluid_styled_content/Configuration/TypoScript/setup.typoscript'
+
+page = PAGE
+page.10 = FLUIDTEMPLATE
+page.10 {
+    templateName = Default
+    templateRootPaths.10 = EXT:thw_ovssp/Resources/Private/Templates/Page/
+    variables {
+        content < styles.content.get
+    }
+}
+
+plugin.tx_thwovssp_portal {
+    view {
+        templateRootPaths.0 = EXT:thw_ovssp/Resources/Private/Templates/
+        partialRootPaths.0 = EXT:thw_ovssp/Resources/Private/Partials/
+        layoutRootPaths.0 = EXT:thw_ovssp/Resources/Private/Layouts/
+    }
+}
+TYPOSCRIPT;
+
+        file_put_contents($configDir . '/setup.typoscript', $setupTs);
+
+        $io->writeln('  Created config/sites/ov-ssp/ (config.yaml + setup.typoscript)');
     }
 
     private function createFeGroup(int $storagePid, SymfonyStyle $io): void
