@@ -211,6 +211,7 @@ YAML;
         // Write TypoScript directly in site config directory (TYPO3 v14)
         $setupTs = <<<'TYPOSCRIPT'
 @import 'EXT:fluid_styled_content/Configuration/TypoScript/setup.typoscript'
+@import 'EXT:felogin/Configuration/TypoScript/setup.typoscript'
 
 page = PAGE
 page.10 = FLUIDTEMPLATE
@@ -252,6 +253,7 @@ TYPOSCRIPT;
 
         $setupTs = <<<'TYPOSCRIPT'
 @import 'EXT:fluid_styled_content/Configuration/TypoScript/setup.typoscript'
+@import 'EXT:felogin/Configuration/TypoScript/setup.typoscript'
 
 page = PAGE
 page.10 = FLUIDTEMPLATE
