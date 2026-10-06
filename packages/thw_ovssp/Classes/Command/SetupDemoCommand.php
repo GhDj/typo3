@@ -446,10 +446,8 @@ YAML;
         $conn = $this->connectionPool->getConnectionForTable('tt_content');
         $conn->insert('tt_content', [
             'pid' => $portalPid,
-            'CType' => 'list',
-            'list_type' => 'thwovssp_portal',
+            'CType' => 'thwovssp_portal',
             'header' => 'OV-SSP Portal',
-            'header_layout' => '100',
             'crdate' => $now,
             'tstamp' => $now,
             'sorting' => 256,
