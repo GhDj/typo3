@@ -36,11 +36,11 @@ class ResetDemoCommand extends Command
 
         $io->title('OV-SSP Demo Reset');
 
-        $this->truncateTable('tx_thwovssp_user_role_mm', $io);
-        $this->truncateTable('tx_thwovssp_domain_model_directoryright', $io);
-        $this->truncateTable('tx_thwovssp_domain_model_role', $io);
-        $this->truncateTable('tx_thwovssp_domain_model_directory', $io);
-        $this->truncateTable('tx_thwovssp_domain_model_orgunit', $io);
+        $this->dropTable('tx_thwovssp_user_role_mm', $io);
+        $this->dropTable('tx_thwovssp_domain_model_directoryright', $io);
+        $this->dropTable('tx_thwovssp_domain_model_role', $io);
+        $this->dropTable('tx_thwovssp_domain_model_directory', $io);
+        $this->dropTable('tx_thwovssp_domain_model_orgunit', $io);
 
         $this->deleteFeUsers($io);
         $this->deleteFeGroups($io);
@@ -49,18 +49,19 @@ class ResetDemoCommand extends Command
 
         $io->success([
             'Demo data reset complete.',
-            'Run "bin/typo3 ovssp:setup-demo" to recreate.',
+            'Run "bin/typo3 extension:setup" to recreate tables.',
+            'Run "bin/typo3 ovssp:setup-demo" to recreate demo data.',
             'Run "bin/typo3 cache:flush" to clear caches.',
         ]);
 
         return Command::SUCCESS;
     }
 
-    private function truncateTable(string $table, SymfonyStyle $io): void
+    private function dropTable(string $table, SymfonyStyle $io): void
     {
         $conn = $this->connectionPool->getConnectionForTable($table);
-        $conn->executeStatement('DELETE FROM ' . $conn->quoteIdentifier($table));
-        $io->writeln('  Cleared ' . $table);
+        $conn->executeStatement('DROP TABLE IF EXISTS ' . $conn->quoteIdentifier($table));
+        $io->writeln('  Dropped ' . $table);
     }
 
     private function deleteFeUsers(SymfonyStyle $io): void
