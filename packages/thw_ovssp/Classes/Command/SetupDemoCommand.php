@@ -61,6 +61,7 @@ class SetupDemoCommand extends Command
         }
 
         $this->createSiteConfiguration($rootPageUid, $baseUrl, $io);
+        $this->ensureTypoScript($io);
         $this->createFeGroup($storagePid, $io);
         $this->createOrgUnits($storagePid, $io);
         $this->createDirectories($storagePid, $io);
@@ -235,6 +236,81 @@ TYPOSCRIPT;
         file_put_contents($configDir . '/setup.typoscript', $setupTs);
 
         $io->writeln('  Created config/sites/ov-ssp/ (config.yaml + setup.typoscript)');
+    }
+
+    private function ensureTypoScript(SymfonyStyle $io): void
+    {
+        $siteDir = getenv('TYPO3_PATH_ROOT') ?: getcwd();
+        if (!is_string($siteDir)) {
+            $siteDir = '/var/www/html';
+        }
+        $sitesDir = $siteDir . '/config/sites';
+
+        $io->section('Ensuring TypoScript setup');
+        $io->writeln('  Scanning: ' . $sitesDir);
+
+        if (!is_dir($sitesDir)) {
+            $io->error('Sites directory not found: ' . $sitesDir);
+
+            return;
+        }
+
+        $setupTs = <<<'TYPOSCRIPT'
+@import 'EXT:fluid_styled_content/Configuration/TypoScript/setup.typoscript'
+
+page = PAGE
+page.10 = FLUIDTEMPLATE
+page.10 {
+    templateName = Default
+    templateRootPaths.10 = EXT:thw_ovssp/Resources/Private/Templates/Page/
+    variables {
+        content < styles.content.get
+    }
+}
+
+plugin.tx_thwovssp_portal {
+    view {
+        templateRootPaths.0 = EXT:thw_ovssp/Resources/Private/Templates/
+        partialRootPaths.0 = EXT:thw_ovssp/Resources/Private/Partials/
+        layoutRootPaths.0 = EXT:thw_ovssp/Resources/Private/Layouts/
+    }
+}
+TYPOSCRIPT;
+
+        $dirs = scandir($sitesDir);
+        if (!is_array($dirs)) {
+            $io->error('Cannot read sites directory');
+
+            return;
+        }
+
+        $written = false;
+        foreach ($dirs as $dir) {
+            if ($dir === '.' || $dir === '..') {
+                continue;
+            }
+            $configDir = $sitesDir . '/' . $dir;
+            if (!file_exists($configDir . '/config.yaml')) {
+                continue;
+            }
+            $tsFile = $configDir . '/setup.typoscript';
+            if (file_exists($tsFile)) {
+                $io->writeln('  setup.typoscript already exists in ' . $dir . '/');
+                $written = true;
+                continue;
+            }
+            $result = file_put_contents($tsFile, $setupTs);
+            if ($result === false) {
+                $io->error('Failed to write ' . $tsFile . ' — check permissions');
+            } else {
+                $io->writeln('  Created ' . $dir . '/setup.typoscript (' . $result . ' bytes)');
+                $written = true;
+            }
+        }
+
+        if (!$written) {
+            $io->warning('No site config directory found to write setup.typoscript');
+        }
     }
 
     private function createFeGroup(int $storagePid, SymfonyStyle $io): void
