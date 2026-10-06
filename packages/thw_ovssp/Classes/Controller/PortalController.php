@@ -31,12 +31,13 @@ class PortalController extends ActionController
         $storagePid = $this->getFeUserStoragePid();
         $this->view->assign('storagePid', $storagePid);
 
-        // Check if login was just attempted
+        // Check if login was just attempted (POST only)
         $request = $this->request;
-        $body = $request->getParsedBody();
-        if (is_array($body) && ($body['logintype'] ?? '') === 'login') {
-            $this->view->assign('loginAttempted', true);
-            $this->view->assign('loginFailed', true);
+        if ($request->getMethod() === 'POST') {
+            $body = $request->getParsedBody();
+            if (is_array($body) && ($body['logintype'] ?? '') === 'login') {
+                $this->view->assign('loginFailed', true);
+            }
         }
 
         return $this->htmlResponse();
