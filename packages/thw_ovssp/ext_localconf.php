@@ -15,7 +15,7 @@ ExtensionUtility::configurePlugin(
         PortalController::class => 'index,userDetail,assignRole,removeRole',
     ],
     [
-        PortalController::class => 'assignRole,removeRole',
+        PortalController::class => 'index,userDetail,assignRole,removeRole',
     ]
 );
 
@@ -25,5 +25,7 @@ ExtensionUtility::configurePlugin(
     [
         PortalController::class => 'login',
     ],
-    []
+    [
+        PortalController::class => 'login',
+    ]
 );
