@@ -57,12 +57,19 @@ class PortalController extends ActionController
                     if ($userRecord !== null && $this->verifyPassword($password, (string) $userRecord['password'])) {
                         $frontendUser = $this->request->getAttribute('frontend.user');
                         if ($frontendUser instanceof FrontendUserAuthentication) {
-                            $frontendUser->createUserSession($userRecord);
+                            $session = $frontendUser->createUserSession($userRecord);
+                            // Update internal session so middleware sets the cookie
+                            $ref = new \ReflectionProperty($frontendUser, 'userSession');
+                            $ref->setValue($frontendUser, $session);
                             $frontendUser->user = $userRecord;
                             $this->context->setAspect('frontend.user', $frontendUser->createUserAspect());
                         }
 
-                        return $this->redirect('login');
+                        // Render logged-in view directly (cookie set by middleware on this response)
+                        $this->view->assign('loggedIn', true);
+                        $this->view->assign('currentUser', $userRecord);
+
+                        return $this->htmlResponse();
                     }
                 }
 
