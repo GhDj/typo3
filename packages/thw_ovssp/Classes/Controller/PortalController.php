@@ -33,11 +33,26 @@ class PortalController extends ActionController
         $storagePid = $this->getFeUserStoragePid();
         $this->view->assign('storagePid', $storagePid);
 
+        // Debug info
+        $userAspect = $this->context->getAspect('frontend.user');
+        $debug = [
+            'method' => $this->request->getMethod(),
+            'isLoggedIn' => $userAspect->isLoggedIn(),
+            'userId' => $userAspect->get('id'),
+            'groupIds' => implode(',', $userAspect->getGroupIds()),
+        ];
+        $body = $this->request->getParsedBody();
+        if (is_array($body)) {
+            $debug['post_logintype'] = $body['logintype'] ?? '(none)';
+            $debug['post_user'] = $body['user'] ?? '(none)';
+            $debug['post_pid'] = $body['pid'] ?? '(none)';
+        }
+        $this->view->assign('debug', $debug);
+
         // Check if login was just attempted (POST only)
-        $request = $this->request;
-        if ($request->getMethod() === 'POST') {
-            $body = $request->getParsedBody();
-            if (is_array($body) && ($body['logintype'] ?? '') === 'login') {
+        if ($this->request->getMethod() === 'POST') {
+            $parsedBody = $this->request->getParsedBody();
+            if (is_array($parsedBody) && ($parsedBody['logintype'] ?? '') === 'login') {
                 $this->view->assign('loginFailed', true);
             }
         }
