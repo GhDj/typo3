@@ -159,17 +159,12 @@ class PortalController extends ActionController
      */
     private function getCurrentUser(): ?array
     {
-        $context = $GLOBALS['TSFE'] ?? null;
-        if ($context === null) {
+        $frontendUser = $this->request->getAttribute('frontend.user');
+        if ($frontendUser === null) {
             return null;
         }
 
-        $feUser = $context->fe_user ?? null;
-        if ($feUser === null) {
-            return null;
-        }
-
-        $userRecord = $feUser->user ?? null;
+        $userRecord = $frontendUser->user ?? null;
         if (!is_array($userRecord) || !isset($userRecord['uid'])) {
             return null;
         }
