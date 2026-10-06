@@ -156,8 +156,10 @@ class SetupDemoCommand extends Command
         if (!is_string($siteDir)) {
             $siteDir = '/var/www/html';
         }
-        // Check if any site config already references this root page
         $sitesDir = $siteDir . '/config/sites';
+        $configDir = null;
+
+        // Check if any site config already references this root page
         if (is_dir($sitesDir)) {
             $dirs = scandir($sitesDir);
             if (is_array($dirs)) {
@@ -169,23 +171,24 @@ class SetupDemoCommand extends Command
                     if (file_exists($candidate)) {
                         $content = file_get_contents($candidate);
                         if (is_string($content) && str_contains($content, 'rootPageId: ' . $rootPageUid)) {
-                            $io->comment('Site configuration already exists at ' . $dir . '/, skipping.');
-
-                            return;
+                            $configDir = $sitesDir . '/' . $dir;
+                            $io->comment('Site config.yaml already exists at ' . $dir . '/');
+                            break;
                         }
                     }
                 }
             }
         }
 
-        $io->section('Creating site configuration');
+        if ($configDir === null) {
+            $io->section('Creating site configuration');
 
-        $configDir = $sitesDir . '/ov-ssp';
-        if (!is_dir($configDir)) {
-            mkdir($configDir, 0775, true);
-        }
+            $configDir = $sitesDir . '/ov-ssp';
+            if (!is_dir($configDir)) {
+                mkdir($configDir, 0775, true);
+            }
 
-        $yaml = <<<YAML
+            $yaml = <<<YAML
 rootPageId: {$rootPageUid}
 base: '{$baseUrl}'
 dependencies:
@@ -202,7 +205,9 @@ languages:
 errorHandling: []
 YAML;
 
-        file_put_contents($configDir . '/config.yaml', $yaml);
+            file_put_contents($configDir . '/config.yaml', $yaml);
+            $io->writeln('  Created config.yaml (rootPageId=' . $rootPageUid . ')');
+        }
 
         // Write TypoScript directly in site config directory (TYPO3 v14)
         $setupTs = <<<'TYPOSCRIPT'
