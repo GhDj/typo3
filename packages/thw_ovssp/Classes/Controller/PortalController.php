@@ -37,9 +37,10 @@ class PortalController extends ActionController
         $userAspect = $this->context->getAspect('frontend.user');
         $debug = [
             'method' => $this->request->getMethod(),
-            'isLoggedIn' => $userAspect->isLoggedIn(),
+            'isLoggedIn' => $userAspect->isLoggedIn() ? 'TRUE' : 'FALSE',
             'userId' => $userAspect->get('id'),
             'groupIds' => implode(',', $userAspect->getGroupIds()),
+            'checkFeUserPid' => var_export($GLOBALS['TYPO3_CONF_VARS']['FE']['checkFeUserPid'] ?? 'NOT_SET', true),
         ];
         $body = $this->request->getParsedBody();
         if (is_array($body)) {
