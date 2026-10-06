@@ -37,13 +37,14 @@ class PortalController extends ActionController
         if ($this->request->getMethod() === 'POST') {
             $parsedBody = $this->request->getParsedBody();
             if (is_array($parsedBody) && ($parsedBody['logintype'] ?? '') === 'login') {
-                return $this->redirectToUri($this->request->getUri()->getPath() . '?loginAttempted=1');
-            }
-        }
+                $this->addFlashMessage(
+                    'Login failed. Invalid username or password.',
+                    'Login',
+                    \TYPO3\CMS\Core\Type\ContextualFeedbackSeverity::ERROR
+                );
 
-        // Show error if redirected after failed login
-        if ($this->request->getQueryParams()['loginAttempted'] ?? false) {
-            $this->view->assign('loginFailed', true);
+                return $this->redirect('login');
+            }
         }
 
         return $this->htmlResponse();
