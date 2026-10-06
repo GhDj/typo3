@@ -17,6 +17,17 @@ class PortalController extends ActionController
         private readonly RightsService $rightsService,
     ) {}
 
+    public function loginAction(): ResponseInterface
+    {
+        $currentUser = $this->getCurrentUser();
+        if ($currentUser !== null) {
+            $this->view->assign('loggedIn', true);
+            $this->view->assign('currentUser', $currentUser);
+        }
+
+        return $this->htmlResponse();
+    }
+
     public function indexAction(): ResponseInterface
     {
         $currentUser = $this->getCurrentUser();

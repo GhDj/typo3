@@ -15,3 +15,12 @@ ExtensionUtility::configurePlugin(
         PortalController::class => 'assignRole,removeRole',
     ]
 );
+
+ExtensionUtility::configurePlugin(
+    'ThwOvssp',
+    'Login',
+    [
+        PortalController::class => 'login',
+    ],
+    []
+);

@@ -1,0 +1,32 @@
+<html xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers"
+      data-namespace-typo3-fluid="true">
+
+<f:if condition="{loggedIn}">
+    <f:then>
+        <div class="alert alert-info">
+            Angemeldet als / Logged in as: <strong>{currentUser.username}</strong>
+        </div>
+        <form method="post" action="">
+            <input type="hidden" name="logintype" value="logout" />
+            <button type="submit" class="btn btn-outline-secondary">Abmelden / Logout</button>
+        </form>
+        <p class="mt-4"><a href="/portal" class="btn btn-primary">Zum Portal / Go to Portal</a></p>
+    </f:then>
+    <f:else>
+        <h2>Login</h2>
+        <form method="post" action="">
+            <input type="hidden" name="logintype" value="login" />
+            <div class="mb-3">
+                <label for="user" class="form-label">Benutzername / Username</label>
+                <input type="text" name="user" id="user" class="form-control" required="required" autocomplete="username" />
+            </div>
+            <div class="mb-3">
+                <label for="pass" class="form-label">Passwort / Password</label>
+                <input type="password" name="pass" id="pass" class="form-control" required="required" autocomplete="current-password" />
+            </div>
+            <button type="submit" class="btn btn-primary">Anmelden / Login</button>
+        </form>
+    </f:else>
+</f:if>
+
+</html>

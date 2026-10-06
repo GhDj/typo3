@@ -10,3 +10,10 @@ ExtensionUtility::registerPlugin(
     'OV-SSP Portal',
     'EXT:core/Resources/Public/Icons/T3Icons/svgs/content/content-beside-text-img-above-center.svg'
 );
+
+ExtensionUtility::registerPlugin(
+    'ThwOvssp',
+    'Login',
+    'OV-SSP Login',
+    'EXT:core/Resources/Public/Icons/T3Icons/svgs/content/content-beside-text-img-above-center.svg'
+);

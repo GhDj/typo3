@@ -15,3 +15,5 @@ plugin.tx_thwovssp_portal {
         layoutRootPaths.0 = EXT:thw_ovssp/Resources/Private/Layouts/
     }
 }
+
+plugin.tx_thwovssp_login < plugin.tx_thwovssp_portal

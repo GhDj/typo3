@@ -69,7 +69,7 @@ class SetupDemoCommand extends Command
         $this->createUsers($storagePid, $io);
         $this->createRoles($storagePid, $io);
         $this->createDirectoryRights($storagePid, $io);
-        $this->createLoginPlugin($loginPid, $portalPid, $io);
+        $this->createLoginPlugin($loginPid, $io);
         $this->createPortalPlugin($portalPid, $io);
         $this->createHomePage($homePid, $loginPid, $io);
 
@@ -211,8 +211,6 @@ YAML;
         // Write TypoScript directly in site config directory (TYPO3 v14)
         $setupTs = <<<'TYPOSCRIPT'
 @import 'EXT:fluid_styled_content/Configuration/TypoScript/setup.typoscript'
-@import 'EXT:felogin/Configuration/TypoScript/setup.typoscript'
-
 page = PAGE
 page.10 = FLUIDTEMPLATE
 page.10 {
@@ -230,6 +228,8 @@ plugin.tx_thwovssp_portal {
         layoutRootPaths.0 = EXT:thw_ovssp/Resources/Private/Layouts/
     }
 }
+
+plugin.tx_thwovssp_login < plugin.tx_thwovssp_portal
 TYPOSCRIPT;
 
         file_put_contents($configDir . '/setup.typoscript', $setupTs);
@@ -253,8 +253,6 @@ TYPOSCRIPT;
 
         $setupTs = <<<'TYPOSCRIPT'
 @import 'EXT:fluid_styled_content/Configuration/TypoScript/setup.typoscript'
-@import 'EXT:felogin/Configuration/TypoScript/setup.typoscript'
-
 page = PAGE
 page.10 = FLUIDTEMPLATE
 page.10 {
@@ -272,6 +270,8 @@ plugin.tx_thwovssp_portal {
         layoutRootPaths.0 = EXT:thw_ovssp/Resources/Private/Layouts/
     }
 }
+
+plugin.tx_thwovssp_login < plugin.tx_thwovssp_portal
 TYPOSCRIPT;
 
         $dirs = scandir($sitesDir);
@@ -527,7 +527,7 @@ TYPOSCRIPT;
         $io->writeln('  Created 5 DirectoryRights');
     }
 
-    private function createLoginPlugin(int $loginPid, int $portalPid, SymfonyStyle $io): void
+    private function createLoginPlugin(int $loginPid, SymfonyStyle $io): void
     {
         if ($this->contentExists($loginPid)) {
             $io->comment('Login page content already exists, skipping.');
@@ -541,15 +541,14 @@ TYPOSCRIPT;
         $conn = $this->connectionPool->getConnectionForTable('tt_content');
         $conn->insert('tt_content', [
             'pid' => $loginPid,
-            'CType' => 'felogin_login',
+            'CType' => 'thwovssp_login',
             'header' => 'Login',
             'crdate' => $now,
             'tstamp' => $now,
             'sorting' => 256,
-            'pi_flexform' => $this->buildFeloginFlexform($portalPid),
         ]);
 
-        $io->writeln('  Created felogin plugin on Login page (redirects to Portal)');
+        $io->writeln('  Created login plugin on Login page');
     }
 
     private function createPortalPlugin(int $portalPid, SymfonyStyle $io): void
@@ -669,27 +668,4 @@ TYPOSCRIPT;
         return is_array($row) && is_numeric($row['uid']) ? (int) $row['uid'] : 0;
     }
 
-    private function buildFeloginFlexform(int $redirectPid): string
-    {
-        return <<<XML
-<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
-<T3FlexForms>
-    <data>
-        <sheet index="sDEF">
-            <language index="lDEF">
-                <field index="settings.redirectMode">
-                    <value index="vDEF">login</value>
-                </field>
-                <field index="settings.redirectFirstMethod">
-                    <value index="vDEF">1</value>
-                </field>
-                <field index="settings.redirectPageLogin">
-                    <value index="vDEF">{$redirectPid}</value>
-                </field>
-            </language>
-        </sheet>
-    </data>
-</T3FlexForms>
-XML;
-    }
 }
