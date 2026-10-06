@@ -23,6 +23,20 @@ class PortalController extends ActionController
         if ($currentUser !== null) {
             $this->view->assign('loggedIn', true);
             $this->view->assign('currentUser', $currentUser);
+
+            return $this->htmlResponse();
+        }
+
+        // Find storage PID for fe_users
+        $storagePid = $this->getFeUserStoragePid();
+        $this->view->assign('storagePid', $storagePid);
+
+        // Check if login was just attempted
+        $request = $this->request;
+        $body = $request->getParsedBody();
+        if (is_array($body) && ($body['logintype'] ?? '') === 'login') {
+            $this->view->assign('loginAttempted', true);
+            $this->view->assign('loginFailed', true);
         }
 
         return $this->htmlResponse();
@@ -232,5 +246,23 @@ class PortalController extends ActionController
             ->addOrderBy('first_name', 'ASC')
             ->executeQuery()
             ->fetchAllAssociative();
+    }
+
+    private function getFeUserStoragePid(): int
+    {
+        $qb = $this->connectionPool->getQueryBuilderForTable('fe_users');
+        $qb->getRestrictions()->removeAll();
+
+        $row = $qb
+            ->select('pid')
+            ->from('fe_users')
+            ->where(
+                $qb->expr()->gt('thw_uid', $qb->createNamedParameter(0, Connection::PARAM_INT))
+            )
+            ->setMaxResults(1)
+            ->executeQuery()
+            ->fetchAssociative();
+
+        return is_array($row) && is_numeric($row['pid']) ? (int) $row['pid'] : 0;
     }
 }
