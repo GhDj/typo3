@@ -294,11 +294,10 @@ TYPOSCRIPT;
                 continue;
             }
             $tsFile = $configDir . '/setup.typoscript';
-            if (file_exists($tsFile)) {
-                $io->writeln('  setup.typoscript already exists in ' . $dir . '/');
-                $written = true;
-                continue;
-            }
+            $io->writeln('  Checking: ' . $tsFile);
+            $io->writeln('  file_exists: ' . (file_exists($tsFile) ? 'YES' : 'NO'));
+            $io->writeln('  is_file: ' . (is_file($tsFile) ? 'YES' : 'NO'));
+            $io->writeln('  Dir contents: ' . implode(', ', array_diff((array) scandir($configDir), ['.', '..'])));
             $result = file_put_contents($tsFile, $setupTs);
             if ($result === false) {
                 $io->error('Failed to write ' . $tsFile . ' — check permissions');
