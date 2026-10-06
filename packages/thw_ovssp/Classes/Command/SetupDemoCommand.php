@@ -11,6 +11,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use TYPO3\CMS\Core\Core\Environment;
+use TYPO3\CMS\Core\Crypto\PasswordHashing\PasswordHashFactory;
 use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 
@@ -20,10 +21,11 @@ use TYPO3\CMS\Core\Database\ConnectionPool;
 )]
 class SetupDemoCommand extends Command
 {
-    private const DEFAULT_PASSWORD = '$2y$12$LMVq3oMfCMkJE1GRXP2.bOmRADm0FeLYHOVhN2Q8E52GlreHu.LIi'; // Test1234!
+    private const DEFAULT_PASSWORD_PLAIN = 'Test1234!';
 
     public function __construct(
         private readonly ConnectionPool $connectionPool,
+        private readonly PasswordHashFactory $passwordHashFactory,
     ) {
         parent::__construct();
     }
@@ -291,11 +293,6 @@ TYPOSCRIPT;
                 continue;
             }
             $tsFile = $configDir . '/setup.typoscript';
-            if (file_exists($tsFile)) {
-                $io->writeln('  setup.typoscript already exists in ' . $dir . '/');
-                $written = true;
-                continue;
-            }
             $result = file_put_contents($tsFile, $setupTs);
             if ($result === false) {
                 $io->error('Failed to write ' . $tsFile . ' — check permissions');
@@ -441,7 +438,7 @@ TYPOSCRIPT;
         foreach ($users as $user) {
             $conn->insert('fe_users', array_merge($user, [
                 'pid' => $storagePid,
-                'password' => self::DEFAULT_PASSWORD,
+                'password' => $this->hashPassword(self::DEFAULT_PASSWORD_PLAIN),
                 'usergroup' => (string) $groupUid,
                 'thw_realm' => 'EA',
                 'thw_last_import' => date('Y-m-d H:i:s'),
@@ -668,4 +665,10 @@ TYPOSCRIPT;
         return is_array($row) && is_numeric($row['uid']) ? (int) $row['uid'] : 0;
     }
 
+    private function hashPassword(string $plaintext): string
+    {
+        $hashInstance = $this->passwordHashFactory->getDefaultHashInstance('FE');
+
+        return $hashInstance->getHashedPassword($plaintext);
+    }
 }
