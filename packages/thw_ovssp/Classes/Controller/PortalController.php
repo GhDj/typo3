@@ -10,6 +10,7 @@ use TYPO3\CMS\Core\Context\Context;
 use TYPO3\CMS\Core\Crypto\PasswordHashing\PasswordHashFactory;
 use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Http\SetCookieService;
 use TYPO3\CMS\Extbase\Mvc\Controller\ActionController;
 use TYPO3\CMS\Frontend\Authentication\FrontendUserAuthentication;
 
@@ -58,18 +59,26 @@ class PortalController extends ActionController
                         $frontendUser = $this->request->getAttribute('frontend.user');
                         if ($frontendUser instanceof FrontendUserAuthentication) {
                             $session = $frontendUser->createUserSession($userRecord);
-                            // Update internal session so middleware sets the cookie
                             $ref = new \ReflectionProperty($frontendUser, 'userSession');
                             $ref->setValue($frontendUser, $session);
                             $frontendUser->user = $userRecord;
                             $this->context->setAspect('frontend.user', $frontendUser->createUserAspect());
+
+                            // Set session cookie directly on the response
+                            $normalizedParams = $this->request->getAttribute('normalizedParams');
+                            $cookieService = SetCookieService::create($frontendUser->name, $frontendUser->loginType);
+                            $cookie = $cookieService->setSessionCookie($session, $normalizedParams);
+
+                            $this->view->assign('loggedIn', true);
+                            $this->view->assign('currentUser', $userRecord);
+
+                            $response = $this->htmlResponse();
+                            if ($cookie !== null) {
+                                $response = $response->withAddedHeader('Set-Cookie', $cookie->__toString());
+                            }
+
+                            return $response;
                         }
-
-                        // Render logged-in view directly (cookie set by middleware on this response)
-                        $this->view->assign('loggedIn', true);
-                        $this->view->assign('currentUser', $userRecord);
-
-                        return $this->htmlResponse();
                     }
                 }
 
