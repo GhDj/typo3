@@ -7,9 +7,11 @@ namespace Init\Thw\Ovssp\Controller;
 use Init\Thw\Ovssp\Service\RightsService;
 use Psr\Http\Message\ResponseInterface;
 use TYPO3\CMS\Core\Context\Context;
+use TYPO3\CMS\Core\Crypto\PasswordHashing\PasswordHashFactory;
 use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Extbase\Mvc\Controller\ActionController;
+use TYPO3\CMS\Frontend\Authentication\FrontendUserAuthentication;
 
 class PortalController extends ActionController
 {
@@ -17,10 +19,24 @@ class PortalController extends ActionController
         private readonly ConnectionPool $connectionPool,
         private readonly RightsService $rightsService,
         private readonly Context $context,
+        private readonly PasswordHashFactory $passwordHashFactory,
     ) {}
 
     public function loginAction(): ResponseInterface
     {
+        // Handle logout
+        if ($this->request->getMethod() === 'POST') {
+            $parsedBody = $this->request->getParsedBody();
+            if (is_array($parsedBody) && ($parsedBody['logintype'] ?? '') === 'logout') {
+                $frontendUser = $this->request->getAttribute('frontend.user');
+                if ($frontendUser instanceof FrontendUserAuthentication) {
+                    $frontendUser->logoff();
+                }
+
+                return $this->redirect('login');
+            }
+        }
+
         $currentUser = $this->getCurrentUser();
         if ($currentUser !== null) {
             $this->view->assign('loggedIn', true);
@@ -29,14 +45,27 @@ class PortalController extends ActionController
             return $this->htmlResponse();
         }
 
-        // Find storage PID for fe_users
-        $storagePid = $this->getFeUserStoragePid();
-        $this->view->assign('storagePid', $storagePid);
-
-        // After login POST, redirect so session cookie takes effect
+        // Handle login
         if ($this->request->getMethod() === 'POST') {
             $parsedBody = $this->request->getParsedBody();
             if (is_array($parsedBody) && ($parsedBody['logintype'] ?? '') === 'login') {
+                $username = is_string($parsedBody['user'] ?? null) ? $parsedBody['user'] : '';
+                $password = is_string($parsedBody['pass'] ?? null) ? $parsedBody['pass'] : '';
+
+                if ($username !== '' && $password !== '') {
+                    $userRecord = $this->findFeUserByUsername($username);
+                    if ($userRecord !== null && $this->verifyPassword($password, (string) $userRecord['password'])) {
+                        $frontendUser = $this->request->getAttribute('frontend.user');
+                        if ($frontendUser instanceof FrontendUserAuthentication) {
+                            $frontendUser->createUserSession($userRecord);
+                            $frontendUser->user = $userRecord;
+                            $this->context->setAspect('frontend.user', $frontendUser->createUserAspect());
+                        }
+
+                        return $this->redirect('login');
+                    }
+                }
+
                 $this->addFlashMessage(
                     'Login failed. Invalid username or password.',
                     'Login',
@@ -249,6 +278,36 @@ class PortalController extends ActionController
             ->addOrderBy('first_name', 'ASC')
             ->executeQuery()
             ->fetchAllAssociative();
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function findFeUserByUsername(string $username): ?array
+    {
+        $qb = $this->connectionPool->getQueryBuilderForTable('fe_users');
+        $qb->getRestrictions()->removeAll();
+
+        $row = $qb
+            ->select('*')
+            ->from('fe_users')
+            ->where(
+                $qb->expr()->eq('username', $qb->createNamedParameter($username)),
+                $qb->expr()->eq('disable', $qb->createNamedParameter(0, Connection::PARAM_INT)),
+                $qb->expr()->eq('deleted', $qb->createNamedParameter(0, Connection::PARAM_INT))
+            )
+            ->setMaxResults(1)
+            ->executeQuery()
+            ->fetchAssociative();
+
+        return is_array($row) ? $row : null;
+    }
+
+    private function verifyPassword(string $plaintext, string $hash): bool
+    {
+        $hashInstance = $this->passwordHashFactory->getDefaultHashInstance('FE');
+
+        return $hashInstance->checkPassword($plaintext, $hash);
     }
 
     private function getFeUserStoragePid(): int
