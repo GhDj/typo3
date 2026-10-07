@@ -3,23 +3,19 @@
 
 <f:if condition="{accessDenied}">
     <f:then>
-        <div class="login-container">
-            <div class="alert alert-danger">Access denied.</div>
-        </div>
+        <div class="login-container"><div class="alert alert-danger">Access denied.</div></div>
     </f:then>
 </f:if>
 
 <f:if condition="{userNotFound}">
     <f:then>
-        <div class="login-container">
-            <div class="alert alert-warning">User not found.</div>
-        </div>
+        <div class="login-container"><div class="alert alert-warning">User not found.</div></div>
     </f:then>
 </f:if>
 
 <f:if condition="{targetUser}">
 
-<f:render partial="PortalLayout" arguments="{activeNav: 'users', currentUserName: '', userInitials: '', breadcrumbs: '{0: {label: \'Users\', link: \'/portal\'}, 1: {label: \'Details\'}}'}">
+    <f:layout name="Portal" />
     <f:section name="Content">
 
         <div class="page-header">
@@ -30,7 +26,7 @@
         <div class="detail-grid">
             <div class="card">
                 <table class="detail-table">
-                    <tr><th>Username</th><td><span class="username" style="font-family:monospace;font-weight:600">{targetUser.username}</span></td></tr>
+                    <tr><th>Username</th><td><span style="font-family:monospace;font-weight:600">{targetUser.username}</span></td></tr>
                     <tr><th>THW UID</th><td>{targetUser.thw_uid}</td></tr>
                     <tr><th>OE</th><td><span class="badge badge-outline">{targetUser.oe_code}</span> {targetUser.orgunit_name}</td></tr>
                     <tr>
@@ -49,9 +45,7 @@
         <h2 class="page-title" style="font-size:18px;margin-bottom:16px">Roles</h2>
 
         <f:if condition="{targetUser.disable}">
-            <f:then>
-                <div class="alert alert-info">Role assignment disabled for inactive users.</div>
-            </f:then>
+            <div class="alert alert-info">Role assignment disabled for inactive users.</div>
         </f:if>
 
         <f:if condition="{allRoles}">
@@ -109,7 +103,6 @@
         <f:render partial="RightsTable" arguments="{rights: rights}" />
 
     </f:section>
-</f:render>
 
 </f:if>
 

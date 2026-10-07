@@ -1,0 +1,57 @@
+<html xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers"
+      data-namespace-typo3-fluid="true">
+
+<!-- Header -->
+<header class="app-header">
+    <div class="app-header-left">
+        <div class="app-header-logo">
+            <div class="logo-icon">SSP</div>
+            <div class="logo-text">
+                <div class="logo-title">Self-Service</div>
+                <div class="logo-subtitle">User management</div>
+            </div>
+        </div>
+    </div>
+    <div class="app-header-right">
+        <f:if condition="{portalUserInitials}">
+            <div class="header-avatar" title="{portalUserName}">{portalUserInitials}</div>
+        </f:if>
+    </div>
+</header>
+
+<div class="app-layout">
+    <!-- Sidebar -->
+    <nav class="app-sidebar">
+        <a href="/portal" class="nav-item{f:if(condition: '{activeNav} == \'users\'', then: ' active')}">
+            <span class="nav-icon">&#9775;</span> Users
+        </a>
+        <a href="/portal" class="nav-item{f:if(condition: '{activeNav} == \'directories\'', then: ' active')}">
+            <span class="nav-icon">&#128193;</span> Directories
+        </a>
+
+        <div class="nav-section">Central administration</div>
+        <a href="/portal" class="nav-item{f:if(condition: '{activeNav} == \'orgunits\'', then: ' active')}">
+            <span class="nav-icon">&#127970;</span> Organisational units
+        </a>
+    </nav>
+
+    <!-- Content -->
+    <main class="app-content">
+        <f:if condition="{breadcrumb1}">
+            <div class="breadcrumb">
+                <f:if condition="{breadcrumb1Link}">
+                    <f:then><a href="{breadcrumb1Link}">{breadcrumb1}</a></f:then>
+                    <f:else><span>{breadcrumb1}</span></f:else>
+                </f:if>
+                <f:if condition="{breadcrumb2}">
+                    <span class="sep">&#8250;</span>
+                    <span>{breadcrumb2}</span>
+                </f:if>
+            </div>
+        </f:if>
+
+        <f:render section="Content" arguments="{_all}" />
+    </main>
+</div>
+
+</html>

@@ -129,6 +129,7 @@ class PortalController extends ActionController
         $this->view->assign('rights', $rights);
         $this->view->assign('roleUids', $roleUids);
         $this->view->assign('allRoles', $allRoles);
+        $this->assignLayoutVars($currentUser, 'users', 'Users', 'Overview');
 
         return $this->htmlResponse();
     }
@@ -165,6 +166,7 @@ class PortalController extends ActionController
         $this->view->assign('rights', $rights);
         $this->view->assign('roleUids', $roleUids);
         $this->view->assign('allRoles', $allRoles);
+        $this->assignLayoutVars($currentUser, 'users', 'Users', 'Details', '/portal');
 
         return $this->htmlResponse();
     }
@@ -324,6 +326,24 @@ class PortalController extends ActionController
         $hashInstance = $this->passwordHashFactory->getDefaultHashInstance('FE');
 
         return $hashInstance->checkPassword($plaintext, $hash);
+    }
+
+    /**
+     * @param array<string, mixed> $currentUser
+     */
+    private function assignLayoutVars(array $currentUser, string $activeNav, string $breadcrumb1, string $breadcrumb2 = '', string $breadcrumb1Link = ''): void
+    {
+        $username = is_string($currentUser['username'] ?? null) ? $currentUser['username'] : '';
+        $firstName = is_string($currentUser['first_name'] ?? null) ? $currentUser['first_name'] : '';
+        $lastName = is_string($currentUser['last_name'] ?? null) ? $currentUser['last_name'] : '';
+        $initials = mb_strtoupper(mb_substr($firstName, 0, 1) . mb_substr($lastName, 0, 1));
+
+        $this->view->assign('activeNav', $activeNav);
+        $this->view->assign('portalUserName', $username);
+        $this->view->assign('portalUserInitials', $initials ?: mb_strtoupper(mb_substr($username, 0, 2)));
+        $this->view->assign('breadcrumb1', $breadcrumb1);
+        $this->view->assign('breadcrumb2', $breadcrumb2);
+        $this->view->assign('breadcrumb1Link', $breadcrumb1Link);
     }
 
     private function getFeUserStoragePid(): int

@@ -12,78 +12,75 @@
     </f:then>
     <f:else>
 
-        <f:render partial="PortalLayout" arguments="{activeNav: 'users', currentUserName: currentUser.username, userInitials: currentUser.username, breadcrumbs: '{0: {label: \'Users\', link: \'\'}, 1: {label: \'Overview\'}}'}">
-            <f:section name="Content">
+        <f:layout name="Portal" />
+        <f:section name="Content">
 
-                <div class="page-header">
-                    <h1 class="page-title">Users</h1>
-                </div>
+            <div class="page-header">
+                <h1 class="page-title">Users</h1>
+            </div>
 
-                <f:if condition="{isAdmin}">
-                    <f:then>
-                        <f:if condition="{users}">
-                            <f:then>
-                                <div class="tabs">
-                                    <span class="tab-item active">
-                                        All <span class="tab-count">{users -> f:count()}</span>
-                                    </span>
-                                </div>
+            <f:if condition="{isAdmin}">
+                <f:then>
+                    <f:if condition="{users}">
+                        <f:then>
+                            <div class="tabs">
+                                <span class="tab-item active">
+                                    All <span class="tab-count">{users -> f:count()}</span>
+                                </span>
+                            </div>
 
-                                <div class="table-card">
-                                    <table class="data-table">
-                                        <thead>
-                                            <tr>
-                                                <th>Username</th>
-                                                <th>OE</th>
-                                                <th>Status</th>
-                                                <th></th>
+                            <div class="table-card">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Username</th>
+                                            <th>OE</th>
+                                            <th>Status</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <f:for each="{users}" as="user">
+                                            <tr class="{f:if(condition: user.disable, then: 'row-disabled')}">
+                                                <td class="user-cell">
+                                                    <div class="username">{user.username}</div>
+                                                    <div class="fullname">{user.first_name} {user.last_name}</div>
+                                                </td>
+                                                <td>
+                                                    <span class="badge badge-outline">{currentUser.oe_code}</span>
+                                                </td>
+                                                <td>
+                                                    <f:if condition="{user.disable}">
+                                                        <f:then><span class="status-icon status-inactive" title="Inactive">&#10006;</span></f:then>
+                                                        <f:else><span class="status-icon status-active" title="Active">&#10004;</span></f:else>
+                                                    </f:if>
+                                                </td>
+                                                <td>
+                                                    <f:link.action action="userDetail" arguments="{userUid: user.uid}" class="action-link">
+                                                        Details
+                                                    </f:link.action>
+                                                </td>
                                             </tr>
-                                        </thead>
-                                        <tbody>
-                                            <f:for each="{users}" as="user">
-                                                <tr class="{f:if(condition: user.disable, then: 'row-disabled')}">
-                                                    <td class="user-cell">
-                                                        <div class="username">{user.username}</div>
-                                                        <div class="fullname">{user.first_name} {user.last_name}</div>
-                                                    </td>
-                                                    <td>
-                                                        <span class="badge badge-outline">{currentUser.oe_code}</span>
-                                                    </td>
-                                                    <td>
-                                                        <f:if condition="{user.disable}">
-                                                            <f:then><span class="status-icon status-inactive" title="Inactive">&#10006;</span></f:then>
-                                                            <f:else><span class="status-icon status-active" title="Active">&#10004;</span></f:else>
-                                                        </f:if>
-                                                    </td>
-                                                    <td>
-                                                        <f:link.action action="userDetail" arguments="{userUid: user.uid}" class="action-link">
-                                                            Details
-                                                        </f:link.action>
-                                                    </td>
-                                                </tr>
-                                            </f:for>
-                                        </tbody>
-                                    </table>
-                                    <div class="table-footer">
-                                        <span>Show 1 to {users -> f:count()} of {users -> f:count()} results</span>
-                                    </div>
+                                        </f:for>
+                                    </tbody>
+                                </table>
+                                <div class="table-footer">
+                                    <span>Show 1 to {users -> f:count()} of {users -> f:count()} results</span>
                                 </div>
-                            </f:then>
-                            <f:else>
-                                <div class="alert alert-info">No users found.</div>
-                            </f:else>
-                        </f:if>
-                    </f:then>
-                    <f:else>
-                        <div class="page-header">
-                            <h1 class="page-title">Your Permissions</h1>
-                        </div>
-                        <f:render partial="RightsTable" arguments="{rights: rights}" />
-                    </f:else>
-                </f:if>
+                            </div>
+                        </f:then>
+                        <f:else>
+                            <div class="alert alert-info">No users found.</div>
+                        </f:else>
+                    </f:if>
+                </f:then>
+                <f:else>
+                    <h2 class="page-title" style="font-size:18px;margin-bottom:16px">Your Permissions</h2>
+                    <f:render partial="RightsTable" arguments="{rights: rights}" />
+                </f:else>
+            </f:if>
 
-            </f:section>
-        </f:render>
+        </f:section>
 
     </f:else>
 </f:if>
