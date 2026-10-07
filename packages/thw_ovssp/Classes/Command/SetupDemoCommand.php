@@ -65,6 +65,7 @@ class SetupDemoCommand extends Command
 
         $this->createSiteConfiguration($rootPageUid, $baseUrl, $io);
         $this->ensureTypoScript($io);
+        $this->publishAssets($io);
         $this->createFeGroup($storagePid, $io);
         $this->createOrgUnits($storagePid, $io);
         $this->createDirectories($storagePid, $io);
@@ -305,6 +306,26 @@ TYPOSCRIPT;
         if (!$written) {
             $io->warning('No site config directory found to write setup.typoscript');
         }
+    }
+
+    private function publishAssets(SymfonyStyle $io): void
+    {
+        $publicDir = Environment::getPublicPath() . '/assets/ovssp';
+        if (!is_dir($publicDir)) {
+            mkdir($publicDir, 0775, true);
+        }
+
+        $source = dirname(__DIR__, 2) . '/Resources/Public/Css/portal.css';
+        $target = $publicDir . '/portal.css';
+
+        if (!file_exists($source)) {
+            $io->warning('CSS source not found: ' . $source);
+
+            return;
+        }
+
+        copy($source, $target);
+        $io->writeln('  Published CSS to /assets/ovssp/portal.css');
     }
 
     private function createFeGroup(int $storagePid, SymfonyStyle $io): void
