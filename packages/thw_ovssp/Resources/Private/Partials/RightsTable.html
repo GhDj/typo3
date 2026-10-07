@@ -3,12 +3,12 @@
 
 <f:if condition="{rights}">
     <f:then>
-        <div class="table-responsive">
-            <table class="table table-sm table-striped">
+        <div class="table-card">
+            <table class="data-table rights-table">
                 <thead>
                     <tr>
-                        <th>Verzeichnis / Directory</th>
-                        <th>Zugriff / Access</th>
+                        <th>Directory</th>
+                        <th>Access</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -17,13 +17,13 @@
                             <td>{right.directory_name}</td>
                             <td>
                                 <f:if condition="{right.access} == 'deny'">
-                                    <f:then><span class="badge bg-danger">Verweigert / Deny</span></f:then>
+                                    <f:then><span class="badge badge-danger">Deny</span></f:then>
                                 </f:if>
                                 <f:if condition="{right.access} == 'write'">
-                                    <f:then><span class="badge bg-primary">Schreiben / Write</span></f:then>
+                                    <f:then><span class="badge badge-info">Write</span></f:then>
                                 </f:if>
                                 <f:if condition="{right.access} == 'read'">
-                                    <f:then><span class="badge bg-info">Lesen / Read</span></f:then>
+                                    <f:then><span class="badge badge-muted">Read</span></f:then>
                                 </f:if>
                             </td>
                         </tr>
@@ -33,7 +33,7 @@
         </div>
     </f:then>
     <f:else>
-        <div class="alert alert-info">Keine Berechtigungen. / No permissions assigned.</div>
+        <div class="alert alert-info">No permissions assigned.</div>
     </f:else>
 </f:if>
 

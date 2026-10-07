@@ -2,100 +2,114 @@
       data-namespace-typo3-fluid="true">
 
 <f:if condition="{accessDenied}">
-    <div class="alert alert-danger">Zugriff verweigert. / Access denied.</div>
-    <f:then></f:then>
+    <f:then>
+        <div class="login-container">
+            <div class="alert alert-danger">Access denied.</div>
+        </div>
+    </f:then>
 </f:if>
 
 <f:if condition="{userNotFound}">
-    <div class="alert alert-warning">Benutzer nicht gefunden. / User not found.</div>
-    <f:then></f:then>
+    <f:then>
+        <div class="login-container">
+            <div class="alert alert-warning">User not found.</div>
+        </div>
+    </f:then>
 </f:if>
 
 <f:if condition="{targetUser}">
 
-<f:link.action action="index" class="btn btn-outline-secondary btn-sm mb-3">&laquo; Zurück / Back</f:link.action>
+<f:render partial="PortalLayout" arguments="{activeNav: 'users', currentUserName: '', userInitials: '', breadcrumbs: '{0: {label: \'Users\', link: \'/portal\'}, 1: {label: \'Details\'}}'}">
+    <f:section name="Content">
 
-<h2>{targetUser.first_name} {targetUser.last_name} <small class="text-muted">({targetUser.username})</small></h2>
+        <div class="page-header">
+            <h1 class="page-title">{targetUser.first_name} {targetUser.last_name}</h1>
+            <f:link.action action="index" class="btn btn-outline">&larr; Back to Users</f:link.action>
+        </div>
 
-<div class="row mb-4">
-    <div class="col-md-6">
-        <table class="table table-sm">
-            <tr><th>THW UID</th><td>{targetUser.thw_uid}</td></tr>
-            <tr><th>OE</th><td>{targetUser.oe_code} — {targetUser.orgunit_name}</td></tr>
-            <tr>
-                <th>Status</th>
-                <td>
-                    <f:if condition="{targetUser.disable}">
-                        <f:then><span class="badge bg-secondary">Deaktiviert</span></f:then>
-                        <f:else><span class="badge bg-success">Aktiv</span></f:else>
-                    </f:if>
-                </td>
-            </tr>
-        </table>
-    </div>
-</div>
-
-<h3>Rollen / Roles</h3>
-
-<f:if condition="{targetUser.disable}">
-    <f:then>
-        <div class="alert alert-info">Rollenzuweisung für deaktivierte Benutzer nicht möglich. / Role assignment disabled for inactive users.</div>
-    </f:then>
-</f:if>
-
-<f:if condition="{allRoles}">
-    <div class="table-responsive">
-        <table class="table table-sm">
-            <thead>
-                <tr>
-                    <th>Rolle / Role</th>
-                    <th>Beschreibung / Description</th>
-                    <th>Zugewiesen / Assigned</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                <f:for each="{allRoles}" as="role">
-                    <f:variable name="isAssigned" value="0" />
-                    <f:for each="{roleUids}" as="rid">
-                        <f:if condition="{rid} == {role.uid}">
-                            <f:variable name="isAssigned" value="1" />
-                        </f:if>
-                    </f:for>
+        <div class="detail-grid">
+            <div class="card">
+                <table class="detail-table">
+                    <tr><th>Username</th><td><span class="username" style="font-family:monospace;font-weight:600">{targetUser.username}</span></td></tr>
+                    <tr><th>THW UID</th><td>{targetUser.thw_uid}</td></tr>
+                    <tr><th>OE</th><td><span class="badge badge-outline">{targetUser.oe_code}</span> {targetUser.orgunit_name}</td></tr>
                     <tr>
-                        <td><strong>{role.name}</strong></td>
-                        <td>{role.description}</td>
+                        <th>Status</th>
                         <td>
-                            <f:if condition="{isAssigned} == 1">
-                                <f:then><span class="badge bg-success">Ja / Yes</span></f:then>
-                                <f:else><span class="badge bg-secondary">Nein / No</span></f:else>
-                            </f:if>
-                        </td>
-                        <td>
-                            <f:if condition="!{targetUser.disable}">
-                                <f:if condition="{isAssigned} == 1">
-                                    <f:then>
-                                        <f:link.action action="removeRole" arguments="{userUid: targetUser.uid, roleUid: role.uid}" class="btn btn-sm btn-outline-danger">
-                                            Entfernen / Remove
-                                        </f:link.action>
-                                    </f:then>
-                                    <f:else>
-                                        <f:link.action action="assignRole" arguments="{userUid: targetUser.uid, roleUid: role.uid}" class="btn btn-sm btn-outline-success">
-                                            Zuweisen / Assign
-                                        </f:link.action>
-                                    </f:else>
-                                </f:if>
+                            <f:if condition="{targetUser.disable}">
+                                <f:then><span class="status-icon status-inactive">&#10006;</span> Inactive</f:then>
+                                <f:else><span class="status-icon status-active">&#10004;</span> Active</f:else>
                             </f:if>
                         </td>
                     </tr>
-                </f:for>
-            </tbody>
-        </table>
-    </div>
-</f:if>
+                </table>
+            </div>
+        </div>
 
-<h3>Kombinierte Berechtigungen / Combined Permissions</h3>
-<f:render partial="RightsTable" arguments="{rights: rights}" />
+        <h2 class="page-title" style="font-size:18px;margin-bottom:16px">Roles</h2>
+
+        <f:if condition="{targetUser.disable}">
+            <f:then>
+                <div class="alert alert-info">Role assignment disabled for inactive users.</div>
+            </f:then>
+        </f:if>
+
+        <f:if condition="{allRoles}">
+            <div class="table-card" style="margin-bottom:24px">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Role</th>
+                            <th>Description</th>
+                            <th>Assigned</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <f:for each="{allRoles}" as="role">
+                            <f:variable name="isAssigned" value="0" />
+                            <f:for each="{roleUids}" as="rid">
+                                <f:if condition="{rid} == {role.uid}">
+                                    <f:variable name="isAssigned" value="1" />
+                                </f:if>
+                            </f:for>
+                            <tr>
+                                <td><strong>{role.name}</strong></td>
+                                <td style="color:var(--color-text-secondary);font-size:13px">{role.description}</td>
+                                <td>
+                                    <f:if condition="{isAssigned} == 1">
+                                        <f:then><span class="status-icon status-active">&#10004;</span></f:then>
+                                        <f:else><span style="color:var(--color-text-muted)">&mdash;</span></f:else>
+                                    </f:if>
+                                </td>
+                                <td>
+                                    <f:if condition="!{targetUser.disable}">
+                                        <f:if condition="{isAssigned} == 1">
+                                            <f:then>
+                                                <f:link.action action="removeRole" arguments="{userUid: targetUser.uid, roleUid: role.uid}" class="btn btn-danger btn-sm">
+                                                    Remove
+                                                </f:link.action>
+                                            </f:then>
+                                            <f:else>
+                                                <f:link.action action="assignRole" arguments="{userUid: targetUser.uid, roleUid: role.uid}" class="btn btn-success btn-sm">
+                                                    Assign
+                                                </f:link.action>
+                                            </f:else>
+                                        </f:if>
+                                    </f:if>
+                                </td>
+                            </tr>
+                        </f:for>
+                    </tbody>
+                </table>
+            </div>
+        </f:if>
+
+        <h2 class="page-title" style="font-size:18px;margin-bottom:16px">Combined Permissions</h2>
+        <f:render partial="RightsTable" arguments="{rights: rights}" />
+
+    </f:section>
+</f:render>
 
 </f:if>
 

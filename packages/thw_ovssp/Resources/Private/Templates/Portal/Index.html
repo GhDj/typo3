@@ -3,80 +3,87 @@
 
 <f:if condition="{accessDenied}">
     <f:then>
-        <div class="alert alert-danger">Kein Zugang zum Portal. / No portal access.</div>
+        <div class="login-container">
+            <div class="login-card">
+                <div class="alert alert-danger">Kein Zugang zum Portal. / No portal access.</div>
+                <p style="text-align:center"><a href="/login" class="btn btn-primary btn-login">Zum Login</a></p>
+            </div>
+        </div>
     </f:then>
     <f:else>
 
-        <h2>OV-SSP Portal</h2>
+        <f:render partial="PortalLayout" arguments="{activeNav: 'users', currentUserName: currentUser.username, userInitials: currentUser.username, breadcrumbs: '{0: {label: \'Users\', link: \'\'}, 1: {label: \'Overview\'}}'}">
+            <f:section name="Content">
 
-        <f:if condition="{isAdmin}">
-            <h3>Benutzer Ihrer OE / Users in Your OE</h3>
-            <f:if condition="{users}">
-                <f:then>
-                    <div class="table-responsive">
-                        <table class="table table-striped table-hover">
-                            <thead>
-                                <tr>
-                                    <th>THW UID</th>
-                                    <th>Username</th>
-                                    <th>Name</th>
-                                    <th>Status</th>
-                                    <th></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <f:for each="{users}" as="user">
-                                    <tr class="{f:if(condition: user.disable, then: 'table-secondary')}">
-                                        <td>{user.thw_uid}</td>
-                                        <td><strong>{user.username}</strong></td>
-                                        <td>{user.first_name} {user.last_name}</td>
-                                        <td>
-                                            <f:if condition="{user.disable}">
-                                                <f:then><span class="badge bg-secondary">Deaktiviert</span></f:then>
-                                                <f:else><span class="badge bg-success">Aktiv</span></f:else>
-                                            </f:if>
-                                        </td>
-                                        <td>
-                                            <f:link.action action="userDetail" arguments="{userUid: user.uid}" class="btn btn-sm btn-outline-primary">
-                                                Details
-                                            </f:link.action>
-                                        </td>
-                                    </tr>
-                                </f:for>
-                            </tbody>
-                        </table>
-                    </div>
-                </f:then>
-                <f:else>
-                    <div class="alert alert-info">Keine Benutzer gefunden. / No users found.</div>
-                </f:else>
-            </f:if>
-        </f:if>
+                <div class="page-header">
+                    <h1 class="page-title">Users</h1>
+                </div>
 
-        <h3>Ihre Berechtigungen / Your Permissions</h3>
-        <f:render partial="RightsTable" arguments="{rights: rights}" />
+                <f:if condition="{isAdmin}">
+                    <f:then>
+                        <f:if condition="{users}">
+                            <f:then>
+                                <div class="tabs">
+                                    <span class="tab-item active">
+                                        All <span class="tab-count">{users -> f:count()}</span>
+                                    </span>
+                                </div>
 
-        <h3>Ihre Rollen / Your Roles</h3>
-        <f:if condition="{allRoles}">
-            <ul class="list-group mb-3">
-                <f:for each="{allRoles}" as="role">
-                    <f:variable name="isAssigned" value="0" />
-                    <f:for each="{roleUids}" as="rid">
-                        <f:if condition="{rid} == {role.uid}">
-                            <f:variable name="isAssigned" value="1" />
+                                <div class="table-card">
+                                    <table class="data-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Username</th>
+                                                <th>OE</th>
+                                                <th>Status</th>
+                                                <th></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <f:for each="{users}" as="user">
+                                                <tr class="{f:if(condition: user.disable, then: 'row-disabled')}">
+                                                    <td class="user-cell">
+                                                        <div class="username">{user.username}</div>
+                                                        <div class="fullname">{user.first_name} {user.last_name}</div>
+                                                    </td>
+                                                    <td>
+                                                        <span class="badge badge-outline">{currentUser.oe_code}</span>
+                                                    </td>
+                                                    <td>
+                                                        <f:if condition="{user.disable}">
+                                                            <f:then><span class="status-icon status-inactive" title="Inactive">&#10006;</span></f:then>
+                                                            <f:else><span class="status-icon status-active" title="Active">&#10004;</span></f:else>
+                                                        </f:if>
+                                                    </td>
+                                                    <td>
+                                                        <f:link.action action="userDetail" arguments="{userUid: user.uid}" class="action-link">
+                                                            Details
+                                                        </f:link.action>
+                                                    </td>
+                                                </tr>
+                                            </f:for>
+                                        </tbody>
+                                    </table>
+                                    <div class="table-footer">
+                                        <span>Show 1 to {users -> f:count()} of {users -> f:count()} results</span>
+                                    </div>
+                                </div>
+                            </f:then>
+                            <f:else>
+                                <div class="alert alert-info">No users found.</div>
+                            </f:else>
                         </f:if>
-                    </f:for>
-                    <f:if condition="{isAssigned} == 1">
-                        <li class="list-group-item list-group-item-success">
-                            <strong>{role.name}</strong>
-                            <f:if condition="{role.description}">
-                                <br /><small class="text-muted">{role.description}</small>
-                            </f:if>
-                        </li>
-                    </f:if>
-                </f:for>
-            </ul>
-        </f:if>
+                    </f:then>
+                    <f:else>
+                        <div class="page-header">
+                            <h1 class="page-title">Your Permissions</h1>
+                        </div>
+                        <f:render partial="RightsTable" arguments="{rights: rights}" />
+                    </f:else>
+                </f:if>
+
+            </f:section>
+        </f:render>
 
     </f:else>
 </f:if>

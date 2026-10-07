@@ -1,6 +1,7 @@
 composer.lock
 vendor/
 public/
+!Resources/Public/
 var/
 .phpstan.cache/
 .phpunit.cache/

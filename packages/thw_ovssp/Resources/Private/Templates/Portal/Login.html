@@ -3,32 +3,47 @@
 
 <f:if condition="{loggedIn}">
     <f:then>
-        <div class="alert alert-info">
-            Angemeldet als / Logged in as: <strong>{currentUser.username}</strong>
+        <div class="login-container">
+            <div class="login-card">
+                <h2>OV-SSP</h2>
+                <div class="alert alert-success">
+                    Logged in as <strong>{currentUser.username}</strong>
+                </div>
+                <div style="display:flex;gap:8px;flex-direction:column">
+                    <a href="/portal" class="btn btn-primary btn-login">Go to Portal</a>
+                    <form method="post" action="" style="margin:0">
+                        <input type="hidden" name="logintype" value="logout" />
+                        <button type="submit" class="btn btn-outline btn-login" style="width:100%">Logout</button>
+                    </form>
+                </div>
+            </div>
         </div>
-        <form method="post" action="">
-            <input type="hidden" name="logintype" value="logout" />
-            <button type="submit" class="btn btn-outline-secondary">Abmelden / Logout</button>
-        </form>
-        <p class="mt-4"><a href="/portal" class="btn btn-primary">Zum Portal / Go to Portal</a></p>
     </f:then>
     <f:else>
-        <h2>Login</h2>
+        <div class="login-container">
+            <div class="login-card">
+                <div style="text-align:center;margin-bottom:24px">
+                    <div class="logo-icon" style="width:48px;height:48px;font-size:18px;margin:0 auto 12px;border-radius:10px;background:#1e3a5f;color:white;display:flex;align-items:center;justify-content:center">SSP</div>
+                    <h2 style="margin-bottom:4px">Self-Service Portal</h2>
+                    <p style="font-size:13px;color:#6b7280">Sign in to manage users and permissions</p>
+                </div>
 
-        <f:flashMessages />
+                <f:flashMessages />
 
-        <form method="post" action="">
-            <input type="hidden" name="logintype" value="login" />
-            <div class="mb-3">
-                <label for="user" class="form-label">Benutzername / Username</label>
-                <input type="text" name="user" id="user" class="form-control" required="required" autocomplete="username" />
+                <form method="post" action="">
+                    <input type="hidden" name="logintype" value="login" />
+                    <div class="form-group">
+                        <label for="user" class="form-label">Username</label>
+                        <input type="text" name="user" id="user" class="form-input" required="required" autocomplete="username" />
+                    </div>
+                    <div class="form-group">
+                        <label for="pass" class="form-label">Password</label>
+                        <input type="password" name="pass" id="pass" class="form-input" required="required" autocomplete="current-password" />
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-login" style="margin-top:8px">Sign in</button>
+                </form>
             </div>
-            <div class="mb-3">
-                <label for="pass" class="form-label">Passwort / Password</label>
-                <input type="password" name="pass" id="pass" class="form-control" required="required" autocomplete="current-password" />
-            </div>
-            <button type="submit" class="btn btn-primary">Anmelden / Login</button>
-        </form>
+        </div>
     </f:else>
 </f:if>
 
