@@ -14,7 +14,12 @@
     </div>
     <div class="app-header-right">
         <f:if condition="{portalUserInitials}">
+            <span style="font-size:13px;color:var(--color-text-secondary)">{portalUserName}</span>
             <div class="header-avatar" title="{portalUserName}">{portalUserInitials}</div>
+            <form method="post" action="/login" style="margin:0">
+                <input type="hidden" name="logintype" value="logout" />
+                <button type="submit" class="btn btn-outline btn-sm">Logout</button>
+            </form>
         </f:if>
     </div>
 </header>
