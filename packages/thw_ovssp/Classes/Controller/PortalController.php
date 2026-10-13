@@ -98,6 +98,7 @@ class PortalController extends ActionController
 
         $orgunitUid = is_numeric($currentUser['thw_orgunit']) ? (int) $currentUser['thw_orgunit'] : 0;
 
+        $portalAccess = is_numeric($currentUser['thw_portal_access']) ? (int) $currentUser['thw_portal_access'] : 0;
         if ($portalAccess === 2 && $orgunitUid > 0) {
             $users = $this->getUsersForOrgUnit($orgunitUid);
             $this->view->assign('users', $users);
