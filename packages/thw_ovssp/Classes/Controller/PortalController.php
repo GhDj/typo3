@@ -40,10 +40,7 @@ class PortalController extends ActionController
 
         $currentUser = $this->getCurrentUser();
         if ($currentUser !== null) {
-            $this->view->assign('loggedIn', true);
-            $this->view->assign('currentUser', $currentUser);
-
-            return $this->htmlResponse();
+            return $this->redirectToUri('/portal');
         }
 
         // Handle login
@@ -64,15 +61,12 @@ class PortalController extends ActionController
                             $frontendUser->user = $userRecord;
                             $this->context->setAspect('frontend.user', $frontendUser->createUserAspect());
 
-                            // Set session cookie directly on the response
+                            // Set session cookie on redirect response
                             $normalizedParams = $this->request->getAttribute('normalizedParams');
                             $cookieService = SetCookieService::create($frontendUser->name, $frontendUser->loginType);
                             $cookie = $cookieService->setSessionCookie($session, $normalizedParams);
 
-                            $this->view->assign('loggedIn', true);
-                            $this->view->assign('currentUser', $userRecord);
-
-                            $response = $this->htmlResponse();
+                            $response = $this->redirectToUri('/portal');
                             if ($cookie !== null) {
                                 $response = $response->withAddedHeader('Set-Cookie', $cookie->__toString());
                             }
@@ -97,18 +91,9 @@ class PortalController extends ActionController
 
     public function indexAction(): ResponseInterface
     {
-        $currentUser = $this->getCurrentUser();
+        $currentUser = $this->requireAuth();
         if ($currentUser === null) {
-            $this->view->assign('accessDenied', true);
-
-            return $this->htmlResponse();
-        }
-
-        $portalAccess = is_numeric($currentUser['thw_portal_access']) ? (int) $currentUser['thw_portal_access'] : 0;
-        if ($portalAccess === 0) {
-            $this->view->assign('accessDenied', true);
-
-            return $this->htmlResponse();
+            return $this->redirectToUri('/login');
         }
 
         $orgunitUid = is_numeric($currentUser['thw_orgunit']) ? (int) $currentUser['thw_orgunit'] : 0;
@@ -134,13 +119,77 @@ class PortalController extends ActionController
         return $this->htmlResponse();
     }
 
+    public function directoriesAction(): ResponseInterface
+    {
+        $currentUser = $this->requireAuth();
+        if ($currentUser === null) {
+            return $this->redirectToUri('/login');
+        }
+
+        $qb = $this->connectionPool->getQueryBuilderForTable('tx_thwovssp_domain_model_directory');
+        $directories = $qb
+            ->select('uid', 'name', 'description', 'allows_read', 'allows_write', 'sort_key')
+            ->from('tx_thwovssp_domain_model_directory')
+            ->orderBy('sort_key', 'ASC')
+            ->addOrderBy('name', 'ASC')
+            ->executeQuery()
+            ->fetchAllAssociative();
+
+        $this->view->assign('directories', $directories);
+        $this->view->assign('currentUser', $currentUser);
+        $this->assignLayoutVars($currentUser, 'directories', 'Directories', 'Overview');
+
+        return $this->htmlResponse();
+    }
+
+    public function orgunitsAction(): ResponseInterface
+    {
+        $currentUser = $this->requireAuth();
+        if ($currentUser === null) {
+            return $this->redirectToUri('/login');
+        }
+
+        $qb = $this->connectionPool->getQueryBuilderForTable('tx_thwovssp_domain_model_orgunit');
+        $orgunits = $qb
+            ->select('o.uid', 'o.oe_code', 'o.name', 'o.mail_address')
+            ->from('tx_thwovssp_domain_model_orgunit', 'o')
+            ->orderBy('o.name', 'ASC')
+            ->executeQuery()
+            ->fetchAllAssociative();
+
+        // Count users per orgunit
+        foreach ($orgunits as &$ou) {
+            $countQb = $this->connectionPool->getQueryBuilderForTable('fe_users');
+            $countResult = $countQb
+                ->count('uid')
+                ->from('fe_users')
+                ->where(
+                    $countQb->expr()->eq('thw_orgunit', $countQb->createNamedParameter((int) $ou['uid'], Connection::PARAM_INT)),
+                    $countQb->expr()->gt('thw_uid', $countQb->createNamedParameter(0, Connection::PARAM_INT)),
+                    $countQb->expr()->eq('deleted', $countQb->createNamedParameter(0, Connection::PARAM_INT))
+                )
+                ->executeQuery()
+                ->fetchOne();
+            $ou['user_count'] = is_numeric($countResult) ? (int) $countResult : 0;
+        }
+        unset($ou);
+
+        $this->view->assign('orgunits', $orgunits);
+        $this->view->assign('currentUser', $currentUser);
+        $this->assignLayoutVars($currentUser, 'orgunits', 'Organisational units', 'Overview');
+
+        return $this->htmlResponse();
+    }
+
     public function userDetailAction(int $userUid = 0): ResponseInterface
     {
-        $currentUser = $this->getCurrentUser();
-        if ($currentUser === null || !$this->isOvAdmin($currentUser)) {
-            $this->view->assign('accessDenied', true);
+        $currentUser = $this->requireAuth();
+        if ($currentUser === null) {
+            return $this->redirectToUri('/login');
+        }
 
-            return $this->htmlResponse();
+        if (!$this->isOvAdmin($currentUser)) {
+            return $this->redirect('index');
         }
 
         $targetUser = $this->getUserByUid($userUid);
@@ -206,6 +255,23 @@ class PortalController extends ActionController
         $this->rightsService->removeRole($userUid, $roleUid);
 
         return $this->redirect('userDetail', null, null, ['userUid' => $userUid]);
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function requireAuth(): ?array
+    {
+        $user = $this->getCurrentUser();
+        if ($user === null) {
+            return null;
+        }
+        $portalAccess = is_numeric($user['thw_portal_access']) ? (int) $user['thw_portal_access'] : 0;
+        if ($portalAccess === 0) {
+            return null;
+        }
+
+        return $user;
     }
 
     /**

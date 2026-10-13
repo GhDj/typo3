@@ -12,10 +12,10 @@ ExtensionUtility::configurePlugin(
     'ThwOvssp',
     'Portal',
     [
-        PortalController::class => 'index,userDetail,assignRole,removeRole',
+        PortalController::class => 'index,userDetail,assignRole,removeRole,directories,orgunits',
     ],
     [
-        PortalController::class => 'index,userDetail,assignRole,removeRole',
+        PortalController::class => 'index,userDetail,assignRole,removeRole,directories,orgunits',
     ]
 );
 

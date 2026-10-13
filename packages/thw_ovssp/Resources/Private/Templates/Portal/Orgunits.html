@@ -1,0 +1,51 @@
+<html xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers"
+      data-namespace-typo3-fluid="true">
+
+<f:layout name="Portal" />
+<f:section name="Content">
+
+    <div class="page-header">
+        <h1 class="page-title">Organisational units</h1>
+    </div>
+
+    <f:if condition="{orgunits}">
+        <f:then>
+            <div class="table-card">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Abbreviations</th>
+                            <th>Description</th>
+                            <th>OV mailbox</th>
+                            <th>Users</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <f:for each="{orgunits}" as="ou">
+                            <tr>
+                                <td><span class="badge badge-outline">{ou.oe_code}</span></td>
+                                <td>{ou.name}</td>
+                                <td style="color:var(--color-text-secondary)">
+                                    <f:if condition="{ou.mail_address}">
+                                        <f:then>{ou.mail_address}</f:then>
+                                        <f:else>&mdash;</f:else>
+                                    </f:if>
+                                </td>
+                                <td>{ou.user_count}</td>
+                            </tr>
+                        </f:for>
+                    </tbody>
+                </table>
+                <div class="table-footer">
+                    <span>Show 1 to {orgunits -> f:count()} of {orgunits -> f:count()} results</span>
+                </div>
+            </div>
+        </f:then>
+        <f:else>
+            <div class="alert alert-info">No organisational units found.</div>
+        </f:else>
+    </f:if>
+
+</f:section>
+
+</html>
