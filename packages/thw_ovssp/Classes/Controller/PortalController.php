@@ -52,7 +52,7 @@ class PortalController extends ActionController
 
                 if ($username !== '' && $password !== '') {
                     $userRecord = $this->findFeUserByUsername($username);
-                    if ($userRecord !== null && $this->verifyPassword($password, (string) $userRecord['password'])) {
+                    if ($userRecord !== null && is_string($userRecord['password']) && $this->verifyPassword($password, $userRecord['password'])) {
                         $frontendUser = $this->request->getAttribute('frontend.user');
                         if ($frontendUser instanceof FrontendUserAuthentication) {
                             $session = $frontendUser->createUserSession($userRecord);
@@ -63,6 +63,9 @@ class PortalController extends ActionController
 
                             // Set session cookie on redirect response
                             $normalizedParams = $this->request->getAttribute('normalizedParams');
+                            if (!$normalizedParams instanceof \TYPO3\CMS\Core\Http\NormalizedParams) {
+                                return $this->redirectToUri('/portal');
+                            }
                             $cookieService = SetCookieService::create($frontendUser->name, $frontendUser->loginType);
                             $cookie = $cookieService->setSessionCookie($session, $normalizedParams);
 
@@ -107,8 +110,9 @@ class PortalController extends ActionController
             $this->view->assign('isAdmin', false);
         }
 
-        $rights = $this->rightsService->getCombinedRightsForUser((int) $currentUser['uid']);
-        $roleUids = $this->rightsService->getRoleUidsForUser((int) $currentUser['uid']);
+        $currentUserUid = is_numeric($currentUser['uid']) ? (int) $currentUser['uid'] : 0;
+        $rights = $this->rightsService->getCombinedRightsForUser($currentUserUid);
+        $roleUids = $this->rightsService->getRoleUidsForUser($currentUserUid);
         $allRoles = $this->rightsService->getAllRoles();
 
         $this->view->assign('currentUser', $currentUser);
@@ -165,7 +169,7 @@ class PortalController extends ActionController
                 ->count('uid')
                 ->from('fe_users')
                 ->where(
-                    $countQb->expr()->eq('thw_orgunit', $countQb->createNamedParameter((int) $ou['uid'], Connection::PARAM_INT)),
+                    $countQb->expr()->eq('thw_orgunit', $countQb->createNamedParameter(is_numeric($ou['uid']) ? (int) $ou['uid'] : 0, Connection::PARAM_INT)),
                     $countQb->expr()->gt('thw_uid', $countQb->createNamedParameter(0, Connection::PARAM_INT)),
                     $countQb->expr()->eq('deleted', $countQb->createNamedParameter(0, Connection::PARAM_INT))
                 )
@@ -413,21 +417,4 @@ class PortalController extends ActionController
         $this->view->assign('breadcrumb1Link', $breadcrumb1Link);
     }
 
-    private function getFeUserStoragePid(): int
-    {
-        $qb = $this->connectionPool->getQueryBuilderForTable('fe_users');
-        $qb->getRestrictions()->removeAll();
-
-        $row = $qb
-            ->select('pid')
-            ->from('fe_users')
-            ->where(
-                $qb->expr()->gt('thw_uid', $qb->createNamedParameter(0, Connection::PARAM_INT))
-            )
-            ->setMaxResults(1)
-            ->executeQuery()
-            ->fetchAssociative();
-
-        return is_array($row) && is_numeric($row['pid']) ? (int) $row['pid'] : 0;
-    }
 }

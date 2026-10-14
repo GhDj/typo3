@@ -690,6 +690,6 @@ TYPOSCRIPT;
     {
         $hashInstance = $this->passwordHashFactory->getDefaultHashInstance('FE');
 
-        return $hashInstance->getHashedPassword($plaintext);
+        return $hashInstance->getHashedPassword($plaintext) ?? '';
     }
 }

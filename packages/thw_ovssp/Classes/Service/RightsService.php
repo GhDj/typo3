@@ -125,7 +125,7 @@ class RightsService
     /**
      * Get all available roles.
      *
-     * @return array<int, array{uid: int, name: string, role_group: string, description: string}>
+     * @return list<array<string, mixed>>
      */
     public function getAllRoles(): array
     {

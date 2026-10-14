@@ -39,7 +39,7 @@ class RightsServiceTest extends TestCase
         $exprMock->method('gt')->willReturn('1=1');
 
         $qbMock->method('createNamedParameter')->willReturnCallback(
-            static fn (mixed $value): string => is_string($value) ? "'" . $value . "'" : (string) $value
+            static fn (mixed $value): string => is_string($value) ? "'" . $value . "'" : (is_scalar($value) ? (string) $value : '0')
         );
         $qbMock->method('quoteIdentifier')->willReturnCallback(
             static fn (string $identifier): string => '`' . $identifier . '`'
